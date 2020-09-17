@@ -1,11 +1,11 @@
 $(document).ready(function() {
 
-    $('#cbxNotifFechas').change(function() {
-        GetListaCentros();
-    });
-
     $('#cbxNotifCentros').change(function() {
         GetListaAulas();
+    });
+
+    $('#cbxNotifFechas').change(function() {
+        ListaAsistencia();
     });
 
     $('#cbxNotifAulas').change(function() {
@@ -53,7 +53,6 @@ function GetListaAulas() {
         success: function(r) {
             $('#cbxNotifAulas').html(r);
             GetListaCursos();
-            // ListaAsistencia();
         },
 
         error: function(error) {
@@ -77,7 +76,6 @@ function GetListaCursos() {
         success: function(r) {
             $('#cbxNotifCursos').html(r);
             GetListaHorarios();
-            // ListaAsistencia();
         },
 
         error: function(error) {
@@ -124,20 +122,25 @@ function ListaAsistencia() {
         horario: $('#cbxNotifHorarios').val()
     }
 
-    $.ajax({
-        type: "post",
-        url: "GetHtmlCuadranteAsistenciaAlumnos.php",
-        data: param,
-        success: function(r) {
-            $('#alumnosContainer').html(r);
-            document.body.style.cursor = 'auto';
-        },
+    // Lista solo si hay una fecha seleccionada
+    if (param.fecha != 0) {
 
-        error: function(error) {
-            document.body.style.cursor = 'auto';
-        }
+        $.ajax({
+            type: "post",
+            url: "GetHtmlCuadranteAsistenciaAlumnos.php",
+            data: param,
+            success: function(r) {
+                $('#alumnosContainer').html(r);
+                document.body.style.cursor = 'auto';
+            },
 
-    })
+            error: function(error) {
+                document.body.style.cursor = 'auto';
+            }
+
+        })
+
+    }
 
 }
 

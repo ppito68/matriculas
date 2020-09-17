@@ -7,16 +7,6 @@
 <!-- Contenedor de combos -->
 <div class="container-fluid" id="opciones">
     <div class="row">
-        
-        <!-- Lista de seleccion de la fecha de impartición de la clase -->
-        <div class="col-3 input-group mt-3">
-            <div class="input-group-prepend">
-                <label class="input-group-text" for="cbxNotifFechas">Fecha:</label>
-            </div>
-            <select class="custom-select" id="cbxNotifFechas" name="cbxNotifFechas">
-                <?php echo GetHtmlFillSelectFechas(1); ?> <!--el 1 lo dejo de momento asi para salir del paso -->
-            </select>
-        </div>
 
         <!-- Lista de seleccion de Centro -->
         <div class="col-3 input-group mt-3">
@@ -24,7 +14,17 @@
                 <label class="input-group-text" for="cbxNotifCentros">Centro:</label>
             </div>
             <select class="custom-select" id="cbxNotifCentros" name="cbxNotifCentros" >
-                <!-- <?php //echo GetHtmlFillSelectCentros(0); ?> -->
+                <?php echo GetHtmlFillSelectCentros(0); ?>
+            </select>
+        </div>
+        
+        <!-- Lista de seleccion de la fecha de impartición de la clase -->
+        <div class="col-3 input-group mt-3">
+            <div class="input-group-prepend">
+                <label class="input-group-text" for="cbxNotifFechas">Fecha:</label>
+            </div>
+            <select class="custom-select" id="cbxNotifFechas" name="cbxNotifFechas">
+                <?php echo GetHtmlFillSelectFechas(1); ?> <!--el 1 es la promocion, y lo dejo de momento asi para salir del paso -->
             </select>
         </div>
 
