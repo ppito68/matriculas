@@ -20,25 +20,25 @@ $(document).ready(function() {
         ListaAsistencia();
     });
 
+    Disponibilidadcontroles($('#cbxNotifFechas').val());
 })
 
-function GetListaCentros() {
+// function GetListaCentros() {
 
-    $.ajax({
-        type: "post",
-        url: "GetHtmlSelectCentros.php",
-        success: function(r) {
-            $('#cbxNotifCentros').html(r);
-            GetListaAulas();
-            // ListaAsistencia();
-        },
+//     $.ajax({
+//         type: "post",
+//         url: "GetHtmlSelectCentros.php",
+//         success: function(r) {
+//             $('#cbxNotifCentros').html(r);
+//             GetListaAulas();
+//         },
 
-        error: function(error) {
-            console.log(error);
-        }
-    });
+//         error: function(error) {
+//             console.log(error);
+//         }
+//     });
 
-}
+// }
 
 function GetListaAulas() {
 
@@ -110,9 +110,35 @@ function GetListaHorarios() {
 
 }
 
-function ListaAsistencia() {
+function GetAforo() {
+    const params = {
+        idCentro: $('#cbxNotifCentros').val(),
+        fecha: $('#cbxNotifFechas').val(),
+        idAula: $('#cbxNotifAulas').val(),
+        curso: $('#cbxNotifCursos').val(),
+        horario: $('#cbxNotifHorarios').val()
+    }
 
-    document.body.style.cursor = 'wait';
+    $.ajax({
+        type: "post",
+        url: "GetHtmlAforo.php",
+        data: params,
+        success: function(r) {
+            $('#aforo').html(r);
+        },
+
+        error: function(error) {
+            console.log(error);
+        }
+    });
+}
+
+function Disponibilidadcontroles(fecha) {
+    document.getElementById("btnEnviarEmail").disabled = fecha == 0;
+    document.getElementById("btnGenerar").disabled = fecha == 0;
+}
+
+function ListaAsistencia() {
 
     const param = {
         idCentro: $('#cbxNotifCentros').val(),
@@ -122,8 +148,13 @@ function ListaAsistencia() {
         horario: $('#cbxNotifHorarios').val()
     }
 
+    Disponibilidadcontroles(param.fecha);
+
+
     // Lista solo si hay una fecha seleccionada
     if (param.fecha != 0) {
+
+        document.body.style.cursor = 'wait';
 
         $.ajax({
             type: "post",
@@ -131,6 +162,7 @@ function ListaAsistencia() {
             data: param,
             success: function(r) {
                 $('#alumnosContainer').html(r);
+                GetAforo();
                 document.body.style.cursor = 'auto';
             },
 
@@ -141,6 +173,7 @@ function ListaAsistencia() {
         })
 
     }
+
 
 }
 
@@ -161,7 +194,7 @@ function GenerarAsistencias() {
 
         $.ajax({
             type: "post",
-            url: "GenerarAsistencia.php",
+            url: "GenerarAsistencias.php",
             data: params,
             success: function(r) {
                 ListaAsistencia();

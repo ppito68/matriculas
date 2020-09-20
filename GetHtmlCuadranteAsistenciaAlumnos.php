@@ -35,8 +35,8 @@ $horario = $_POST["horario"];
 // ****************************** C A B E C E R A *********************************
 
 $html = //'<div class="container-fluid">
-         '   <table class="table table-striped">
-                <thead>
+         '   <table class="table table-striped table-sm">
+                <thead class="thead-light">
                     <tr>
                         <th scope="col-auto">nºAl.</th>
                         <th scope="col-2">Name</th>

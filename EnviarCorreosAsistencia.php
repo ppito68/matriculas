@@ -12,6 +12,10 @@ $horario = $_POST["horario"];
 // obtiene el dia de la semana en letras
 $diaSemana = getDiaSemanaEnLetras(date("N", strtotime($fecha)));
 
+if($fecha==0){
+    exit;
+}
+
 $grupos = CovGetGruposAInformar($fecha, $centro, $idAula, $curso, $horario);
 while($grupo=$grupos->fetch(PDO::FETCH_ASSOC)){ 
 
@@ -38,9 +42,10 @@ while($grupo=$grupos->fetch(PDO::FETCH_ASSOC)){
                     "En caso de no poder asistir, te rogamos nos lo comuniques con antelación para que tu plaza pueda ser ocupada por otro compañero." . "\n" . "\n" .
                     "Muchas gracias por tu colaboración." . "\n" . "\n";
                 
-                $destinatario = 'miguelezluis@gmail.com'; // 'jaguilar68@gmail.com'; //  $alumno['email'];
+                $destinatario = $alumno['email']; 
+                // $destinatario = 'jaguilar68@gmail.com'; //'miguelezluis@gmail.com'; //   
 
-                if(  !EnviarEmail($destinatario, 'Comunicado Presencial', $texto)  ){
+                if(  !EnviarEmail($destinatario, 'Comunicado clase PRESENCIAL ' . $diaSemana . ", " . $fechaConFormato , $texto)  ){
                     echo "error al enviar el correo a " . $alumno["nombre"] . " " . $alumno['apellidos'];
                 }else{
                     // registra la fecha de counicacion
@@ -50,21 +55,21 @@ while($grupo=$grupos->fetch(PDO::FETCH_ASSOC)){
             }elseif($alumno['asignado']=='o'){
 
                 $texto =  "Hola, te escribimos desde City School:" . "\n" . "\n" .
-                $alumno['nombre'] . " " . $alumno['apellidos'] .  ", te comunicamos que, según nuestro control interno de asistencia, el próximo día " . $diaSemana . ", " . $fechaConFormato . " la clase para ti será ON LINE, cuyo enlace de conexion es el siguiente." . "\n" . "\n" .
+                $alumno['nombre'] . " " . $alumno['apellidos'] .  ", te comunicamos que, según nuestro control interno de asistencia, el próximo día " . $diaSemana . ", " . $fechaConFormato . " la clase para ti será ON LINE, cuyo enlace de conexiÓn es el siguiente." . "\n" . "\n" .
                 $alumno['url']  . "\n" . "\n" .
                 "Muchas gracias por tu colaboración." . "\n" . "\n";
 
-                $destinatario = 'miguelezluis@gmail.com'; // 'jaguilar68@gmail.com'; //  $alumno['email'];
+                $destinatario = $alumno['email']; 
+                // $destinatario = 'jaguilar68@gmail.com'; //'miguelezluis@gmail.com'; //   
 
-                if(!EnviarEmail($destinatario, 'Comunicado ON LINE', $texto)){
+                if(!EnviarEmail($destinatario, 'Comunicado clase ON LINE ' . $diaSemana . ", " . $fechaConFormato, $texto)){
                     echo "error al enviar el correo a " . $alumno["nombre"] . " " . $alumno['apellidos'];
                 }else{
+                    // registra la fecha de counicacion
                     CovPutFechaComunicacionEmail($fecha, $alumno['numero'], date("Y-m-d H:i:s"));
                 };
 
             }
-
-           
 
         }
 

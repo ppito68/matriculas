@@ -45,23 +45,23 @@
     </ul>
 
     <div class="tab-content">
-    <div id="home" class="tab-pane fade in active">
-        <?php include("frmMttoMatriculas2021.php"); ?>
-    </div>
-    
-    <div id="menu1" class="tab-pane fade">
-         <!-- <h3>Menu 2</h3>
-        <p>Some content in menu 2.</p> -->
-    </div>
+        <div id="home" class="tab-pane fade in active">
+            <?php include("frmMttoMatriculas2021.php"); ?>
+        </div>
+        
+        <div id="menu1" class="tab-pane fade">
+            <!-- <h3>Menu 2</h3>
+            <p>Some content in menu 2.</p> -->
+        </div>
 
-    <div id="menu2" class="tab-pane fade">
-        <!-- <h3>Menu 2</h3>
-        <p>Some content in menu 2.</p> -->
-    </div>
+        <div id="menu2" class="tab-pane fade">
+            <!-- <h3>Menu 2</h3>
+            <p>Some content in menu 2.</p> -->
+        </div>
 
-    <div id="notificaciones" class="tab-pane fade in active">
-        <?php include("frmNotificaciones.php"); ?>
-    </div>
+        <div id="notificaciones" class="tab-pane fade in active">
+            <?php include("frmNotificaciones.php"); ?>
+        </div>
     </div>
 
 </body>

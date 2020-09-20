@@ -2,8 +2,8 @@
 
 Function EnviarEmail($Destinatario, $Asunto, $Mensaje){
 
-    $header='From: CITY SCHOOL <admin@cityschool.es>'; //. "\r\n" .
-    //'Bcc: admin@cityschool.es' . "\r\n"; // esto sería copia oculta
+    $header='From: CITY SCHOOL <admin@cityschool.es>' . "\r\n" .
+    'Bcc: admin@cityschool.es' . "\r\n"; // esto sería copia oculta
     // 'Reply-To: info@lucrecianovias.com' . "\r\n";
 
     try{

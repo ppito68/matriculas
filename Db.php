@@ -568,12 +568,18 @@
 
     // Devuelve los dias lectivos del calendario hasta la fecha recibida como parametro inclusive. 
     // Solo devuelve los dias pertenecientes al mes de la fecha.
-    function CovGetDiasCalendario($fechaHasta){
+    // Devuelve sólo los L-M ó M-J, segun el día de la fecha recibida.
+    // Si el parametro $filtrarMes viene a true, solo muestra los dias del mes de la fechaHasta recibida.
+    // Si $incluyeFechaHasta viene a true, incluye la $fechaHasta recibida, si no, se excluye.
+    function CovGetDiasCalendario($fechaHasta, $filtrarMes = true, $incluyeFechaHasta = true){
         $filtroFecha = "";
         $diasSemana = 0;
         $mes = date("m", strtotime($fechaHasta));
 
-        // Crea el filtro de fecha si esta no es 0
+        $filtroMes = $filtrarMes ? " AND month(fecha) = " . $mes : "";
+        $filtroIncluyeFechaHasta = $incluyeFechaHasta ? " <= " : " < ";
+
+        // Crea el filtro de fecha si ésta no es 0
         if($fechaHasta!=0){
             $diaSemana = date("N", strtotime($fechaHasta)); // obtiene el dia de la semana en cifra
             $filtroDias = "";
@@ -584,7 +590,7 @@
             }else{ // Viernes
                 $filtroDias = " AND diaSemana = 5 ";
             }
-            $filtroFecha = " WHERE fecha <= '" . $fechaHasta . "' AND month(fecha) = " . $mes . $filtroDias;
+            $filtroFecha = " WHERE fecha " . $filtroIncluyeFechaHasta . "'" . $fechaHasta . "'" . $filtroMes . $filtroDias;
         }
         $con=PdoOpenCon();
         $sqlDias = "SELECT * FROM stCalendario" . $filtroFecha . " order by fecha"; 
@@ -593,6 +599,7 @@
         return $diasRecSet;
     }
 
+  
     // Devuelve el total de asistencias según el modo de asistencia, fecha, centro, aula, curso y horario recibido como parametro 
     // Esta funcion es llamada por otras dos funciones: CovGetTotalAsistidos(...) y CovGetTotalOnLine(...),  que suministran a 
     // ésta el modo de asistencia, 'a' ó 'o'
@@ -622,7 +629,7 @@
     // Obtiene los alumnos de un grupo con el total de asistencias A CLASE y el total de asistencias ONLINE, ordenados por
     //  los alumnos que mas han asistidos a clase hasta los que menos. Estos totales son calculados con la fecha ANTERIOR  a la 
     // recibida como parametro $fecha, ya que las nuevas asignaciones se van a realizar en la fecha recibida.
-    // La ultima columna _asignado_ obtiene los modos preasignados en la fecha.
+    // La ultima columna _asignado_ obtiene los modos preasignados en la fecha. El algoritmo que asigna las asistencias automaticamente respetará esta asignacion si está preasignada.
     // Esta funcion es usada para asignarle la asitencia ON Line
     // por el mismo orden mencionado.
     function CovGetAsistenciasGrupo($fecha, $centro, $idAula, $curso, $horario){
@@ -634,7 +641,7 @@
         }elseif($diaSemana == 2 || $diaSemana == 4){ // Martes y Jueves
             $filtroDias = " AND dias = 'T-TH' ";
         }
-
+        
         $con=PdoOpenCon();
         $sql="SELECT fm.numero, fm.nombre, fm.apellidos, fm.url, fm.email, 
                     (select count(numeroAlumno) from stControlAsistencia 
@@ -650,9 +657,22 @@
         
         // --- LINEA DE DEPURACION->echo "Consulta de los alumnos del grupo:" . $sql . "\n";            
         
-            $recSet=$con->prepare($sql);
+        $recSet=$con->prepare($sql);
         $recSet->execute(array(':centro'=>$centro, ':idAula'=>$idAula, ':curso'=>$curso, ':horario'=>$horario, ':fecha'=>$fecha));
         return $recSet;
+    }
+
+    function covEsOnline($numeroAlumno, $fecha){
+        $con=PdoOpenCon();
+        $sql="select if(modoAsistencia='o', 1,0) as r
+                from stControlAsistencia where numeroAlumno = :numero and fecha = :fecha";
+        $recSet=$con->prepare($sql);
+        $recSet->execute(array(':fecha'=>$fecha, ':numero'=>$numeroAlumno));
+        if($alum=$recSet->fetch(PDO::FETCH_ASSOC)){
+            return $alum['r'];
+        }else{
+            return false;
+        }
     }
 
 
@@ -764,35 +784,35 @@
     }
 
     // no sé si lo he usado. BUscar y anular si no se usa
-    function CovGetAlumnos($idCentro, $dias, $idAula){
-        $filtroCentro = $idCentro==0 || $idCentro=='' ? '' : ' AND cen.id = ' . $idCentro;
-        $filtroCurso = $idCurso==0 || $idCurso=='' ? '' : ' AND cur.id = ' . $idCurso;
-        $filtroDia = $idDia==0 || $idDia=='' ? '' : ' AND dia.id = ' . $idDia;
-        $filtroHorario = $idHorario==0 || $idHorario=='' ? '' : ' AND hor.id = ' . $idHorario;
-        $filtropromocion = $idPromocion==0 || $idPromocion=='' ? '' : ' AND mat.IdPromocion = ' . $idPromocion;
-        $filtroAulas = $idAula==0 || $idAula=='' ? '' : ' AND mat.idAula = ' . $idAula;
+    // function CovGetAlumnos($idCentro, $dias, $idAula){
+    //     $filtroCentro = $idCentro==0 || $idCentro=='' ? '' : ' AND cen.id = ' . $idCentro;
+    //     $filtroCurso = $idCurso==0 || $idCurso=='' ? '' : ' AND cur.id = ' . $idCurso;
+    //     $filtroDia = $idDia==0 || $idDia=='' ? '' : ' AND dia.id = ' . $idDia;
+    //     $filtroHorario = $idHorario==0 || $idHorario=='' ? '' : ' AND hor.id = ' . $idHorario;
+    //     $filtropromocion = $idPromocion==0 || $idPromocion=='' ? '' : ' AND mat.IdPromocion = ' . $idPromocion;
+    //     $filtroAulas = $idAula==0 || $idAula=='' ? '' : ' AND mat.idAula = ' . $idAula;
 
-        $con=PdoOpenCon();
+    //     $con=PdoOpenCon();
         
-        $sql="SELECT mat.id as idMatricula, al.id AS idAlumno, al.NumeroAlumno, 
-                CONCAT(al.Apellidos, ', ', al.Nombre) as nombreAlumno, 
-                cur.Descripcion as descripcionCurso, dia.dias, hor.horario, mat.observacionesTutor,
-                mat.observacionesSecretaria
-                FROM matriculas AS mat
-                    INNER JOIN ssalumnos al ON al.id = mat.idAlumno
-                    INNER JOIN ssCentros cen ON cen.id = mat.idCentro
-                    INNER JOIN sscursos cur ON cur.id = mat.idCurso
-                    INNER JOIN ssDiasSemana dia ON dia.id = mat.idDia
-                    INNER JOIN ssHorarios hor ON hor.id = mat.idHorario
-                    INNER JOIN ssAulas aul ON aul.id = mat.idAula
-                WHERE 1 = 1 " . $filtroCentro . $filtroCurso . $filtroDia . 
-                $filtroHorario . $filtropromocion . $filtroAulas . " ORDER BY al.NumeroAlumno";
+    //     $sql="SELECT mat.id as idMatricula, al.id AS idAlumno, al.NumeroAlumno, 
+    //             CONCAT(al.Apellidos, ', ', al.Nombre) as nombreAlumno, 
+    //             cur.Descripcion as descripcionCurso, dia.dias, hor.horario, mat.observacionesTutor,
+    //             mat.observacionesSecretaria
+    //             FROM matriculas AS mat
+    //                 INNER JOIN ssalumnos al ON al.id = mat.idAlumno
+    //                 INNER JOIN ssCentros cen ON cen.id = mat.idCentro
+    //                 INNER JOIN sscursos cur ON cur.id = mat.idCurso
+    //                 INNER JOIN ssDiasSemana dia ON dia.id = mat.idDia
+    //                 INNER JOIN ssHorarios hor ON hor.id = mat.idHorario
+    //                 INNER JOIN ssAulas aul ON aul.id = mat.idAula
+    //             WHERE 1 = 1 " . $filtroCentro . $filtroCurso . $filtroDia . 
+    //             $filtroHorario . $filtropromocion . $filtroAulas . " ORDER BY al.NumeroAlumno";
 
-        $recSet=$con->prepare($sql);
-        $recSet->execute();
-        return $recSet; 
+    //     $recSet=$con->prepare($sql);
+    //     $recSet->execute();
+    //     return $recSet; 
     
-    }
+    // }
 
     function CovGetCursos($idCentro, $idAula, $diasSemana){
         $sql="select distinct curso from stFM2021 fm
@@ -834,6 +854,50 @@
                                         ":fechaEmail"=>$fechaEmail));
         return $result; 
     }
+
+    // Devuelve el aforo de un grupo en concreto. Si no vienen todos los filtros devuelve NULL
+    function CovAforoGrupo($fecha, $centro, $idAula, $curso, $horario){
+
+        // Si se han recibido todos los filtros, ejecutra la consulta, si no, devuelve null
+        if($centro != 0 && $idAula != 0 && $curso != '' && $horario != '' && $fecha != 0){
+
+            // esto es redundante, se podria quitar y poner los filtros directamente en la consulta.
+            $filtroCentro = $centro > 0 ? " AND centro = " . $centro : "";
+            $filtroAula = $idAula > 0 ? " AND idAula = " . $idAula : "";
+            $filtroCurso = $curso != '' ? " AND curso = '" . $curso . "' " : ""; // * ojo, $curso != '' devuelve true pero $curso != 0 devuelve false ¿¿¿por qué????
+            $filtroHorario = $horario != '' ? " AND horario = '" . $horario . "' " : ""; //* sin emabargo $horario != 0 devuelve true, tiene cojones.
+
+            $diaSemana = date("N", strtotime($fecha)); // obtiene el dia de la semana en cifra
+            $filtroDias = "";
+            if($diaSemana == 1 || $diaSemana == 3){ // Lunes y Miercoles
+                $filtroDias = " AND dias = 'M-W' ";
+            }elseif($diaSemana == 2 || $diaSemana == 4){ // Martes y Jueves
+                $filtroDias = " AND dias = 'T-TH' ";
+            }
+            $con=PdoOpenCon();
+            $sql="SELECT * FROM viewGrupos WHERE 1 = 1 " . $filtroCentro . $filtroAula . $filtroCurso .
+                $filtroHorario . $filtroDias;
+            // where centro = :centro and idAula = :idAula 
+              //      and dias = :dias and horario = :horario and curso = :curso";
+
+            $recSet=$con->prepare($sql);
+            $recSet->execute(); //array(":dias"=>$dias, 
+                                         //   ":centro"=>$centro, 
+                                           // ":idAula"=>$idAula,
+                                            //":curso"=>$curso,
+                                            //":horario"=>$horario));
+            return $recSet; 
+
+        }else{
+            return null;
+        }
+
+     
+      
+
+    }
+
+
 
     
 
