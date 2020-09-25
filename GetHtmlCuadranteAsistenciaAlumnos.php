@@ -39,10 +39,10 @@ $html = //'<div class="container-fluid">
                 <thead class="thead-light">
                     <tr>
                         <th scope="col-auto">nºAl.</th>
-                        <th scope="col-2">Name</th>
-                        <th scope="col-1">day/week</th>
-                        <th scope="col-1">Curse</th>
-                        <th scope="col-1">Hour</th>';
+                        <th scope="col-2">Name</th>';
+                        // <th scope="col-1">day/week</th>
+                        // <th scope="col-1">Curse</th>
+                        // <th scope="col-1">Hour</th>';
 
 
 // obtiene los dias del calendario del mes de la fecha hasta la fecha recibida inclusive.
@@ -76,10 +76,18 @@ while($alum=$alumnos->fetch(PDO::FETCH_ASSOC)){
 
     $html = $html .        
         '<th scope="row">' . $alum["numero"] . '</th>
-        <td>' . $alum["nombre"] . '</td>
-        <td>' . $alum["dias"] . '</td>
-        <td>' . $alum["curso"] . '</td>
-        <td>' . $alum["horario"] . '</td>';
+        <td>
+            <img src="./img/eliminarAlumno.svg" width="20px" height="20px" onclick="EliminarAlumno(' . $alum["numero"] . ')"> 
+            <a href="frmMttoAlumnos2021.php?numero=' . $alum["numero"] . '">' .        
+                $alum["nombre"] . 
+            '</a>
+            <span class="small"> - ' 
+                . $alum["curso"] . ' - ' . $alum["Aula"] . ' - ' . $alum["dias"] . ' - ' . $alum["horario"] . 
+            '</span>
+        </td>';
+        // <td>' . $alum["dias"] . '</td>
+        // <td>' . $alum["curso"] . '</td>
+        // <td>' . $alum["horario"] . '</td>';
 
     // añade las columnas de los dias de asistencia del alumno
     foreach($diasArray as $diaCal){

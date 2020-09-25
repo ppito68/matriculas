@@ -13,11 +13,41 @@ function GetHtmlFillSelectCentros($idCentroSeleccionado){
     return $html;
 }
 
+function GetHtmlFillSelectCursos($cursoPreSelect){
+    $html='<option value="0"></option>';
+    $cursos=CovGetAllCursos();
+    foreach($cursos as $curso){ 
+        $selected=$cursoPreSelect==$curso["curso"] ? "selected" : "";
+        $html = $html . '<option value="' . $curso["curso"] . '" ' . $selected . '>' . $curso["curso"] . '</option>';
+    }
+    return $html;
+}
+
+function GetHtmlFillSelectAulas($idAulaPreSelect){
+    $html='<option value="0"></option>';
+    $aulas=GetAulas(); // sin parametros no filtra el centro
+    foreach($aulas as $aula){ 
+        $selected=$idAulaPreSelect==$aula["Id"] ? "selected" : "";
+        $html = $html . '<option value="' . $aula["Id"] . '" ' . $selected . '>' . $aula["Aula"] . '</option>';
+    }
+    return $html;
+}
+
 function GetHtmlFillSelectFechas($idPromocion){
     $html='<option value="0"></option>';
     $fechas=GetFechasCalendario($idPromocion);
     foreach($fechas as $fecha){ 
         $html = $html . '<option value="' . $fecha["fecha"] . '">' . $fecha["diaSemanaYFecha"] . '</option>';
+    }
+    return $html;
+}
+
+function GetHtmlFillSelectHorarios($horarioPreSelect){
+    $html='<option value="0"></option>';
+    $horarios=CovGetAllHorarios();
+    foreach($horarios as $horario){ 
+        $selected=$horarioPreSelect==$horario["horario"] ? "selected" : "";
+        $html = $html . '<option value="' . $horario["horario"] . '" ' . $selected . '>' . $horario["horario"] . '</option>';
     }
     return $html;
 }

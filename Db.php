@@ -448,7 +448,7 @@
     }
 
     // Param: $idCentro.- Si 0, no filtra
-    function GetAulas($idCentro){
+    function GetAulas($idCentro=0){
         $filtroCentro = $idCentro==0 ? '' : ' WHERE idCentro = ' . $idCentro;
         $con=PdoOpenCon();
         $sql="SELECT * FROM ssAulas" . $filtroCentro;
@@ -783,36 +783,13 @@
         return $result; 
     }
 
-    // no sé si lo he usado. BUscar y anular si no se usa
-    // function CovGetAlumnos($idCentro, $dias, $idAula){
-    //     $filtroCentro = $idCentro==0 || $idCentro=='' ? '' : ' AND cen.id = ' . $idCentro;
-    //     $filtroCurso = $idCurso==0 || $idCurso=='' ? '' : ' AND cur.id = ' . $idCurso;
-    //     $filtroDia = $idDia==0 || $idDia=='' ? '' : ' AND dia.id = ' . $idDia;
-    //     $filtroHorario = $idHorario==0 || $idHorario=='' ? '' : ' AND hor.id = ' . $idHorario;
-    //     $filtropromocion = $idPromocion==0 || $idPromocion=='' ? '' : ' AND mat.IdPromocion = ' . $idPromocion;
-    //     $filtroAulas = $idAula==0 || $idAula=='' ? '' : ' AND mat.idAula = ' . $idAula;
-
-    //     $con=PdoOpenCon();
-        
-    //     $sql="SELECT mat.id as idMatricula, al.id AS idAlumno, al.NumeroAlumno, 
-    //             CONCAT(al.Apellidos, ', ', al.Nombre) as nombreAlumno, 
-    //             cur.Descripcion as descripcionCurso, dia.dias, hor.horario, mat.observacionesTutor,
-    //             mat.observacionesSecretaria
-    //             FROM matriculas AS mat
-    //                 INNER JOIN ssalumnos al ON al.id = mat.idAlumno
-    //                 INNER JOIN ssCentros cen ON cen.id = mat.idCentro
-    //                 INNER JOIN sscursos cur ON cur.id = mat.idCurso
-    //                 INNER JOIN ssDiasSemana dia ON dia.id = mat.idDia
-    //                 INNER JOIN ssHorarios hor ON hor.id = mat.idHorario
-    //                 INNER JOIN ssAulas aul ON aul.id = mat.idAula
-    //             WHERE 1 = 1 " . $filtroCentro . $filtroCurso . $filtroDia . 
-    //             $filtroHorario . $filtropromocion . $filtroAulas . " ORDER BY al.NumeroAlumno";
-
-    //     $recSet=$con->prepare($sql);
-    //     $recSet->execute();
-    //     return $recSet; 
-    
-    // }
+    function CovGetAllCursos(){
+        $sql="select distinct curso from stFM2021 order by curso";
+        $con=PdoOpenCon();
+        $recSet=$con->prepare($sql);
+        $recSet->execute(); 
+        return $recSet; 
+    }
 
     function CovGetCursos($idCentro, $idAula, $diasSemana){
         $sql="select distinct curso from stFM2021 fm
@@ -838,6 +815,14 @@
         $con=PdoOpenCon();
         $sql="select distinct horario from stFM2021 fm
                 where 1 = 1 " . $filtroCentro . $filtroAula . $filtroCurso . $filtroDias;
+        $recSet=$con->prepare($sql);
+        $recSet->execute();
+        return $recSet; 
+    }
+
+    function CovGetAllHorarios(){
+        $con=PdoOpenCon();
+        $sql="select distinct horario from stFM2021 order by horario";
         $recSet=$con->prepare($sql);
         $recSet->execute();
         return $recSet; 
@@ -895,6 +880,64 @@
      
       
 
+    }
+
+    function CovGrabacionAlumno($numero, $nombre, $apellidos, $centro, $idAula, $curso, $horario, $dias, $email, $email2, $url){
+        $con=PdoOpenCon();
+        $sql="INSERT INTO stFM2021 (numero, nombre, apellidos, centro, idAula, curso, horario, dias, email, email2, url ) 
+                VALUES (:numero, :nombre, :apellidos, :centro, :idAula, :curso, :horario, :dias, :email, :email2, :url )";
+        $op=$con->prepare($sql);
+        $result=$op->execute(array(":numero"=>$numero, ":nombre"=>$nombre, ":apellidos"=>$apellidos, ":centro"=> $centro, 
+                                    ":idAula"=> $idAula, ":curso"=>$curso, ":horario"=>$horario, ":dias"=>$dias, 
+                                    ":email"=>$email, ":email2"=>$email2, ":url"=>$url));
+        return $result; 
+    }
+
+    function CovModificacionAlumno($numero, $nombre, $apellidos, $centro, $idAula, $curso, $horario, $dias, $email, $email2, $url){
+        $con=PdoOpenCon();
+        $sql="UPDATE stFM2021 SET nombre = :nombre, apellidos = :apellidos, centro = :centro, 
+                        idAula = :idAula, curso = :curso, horario = :horario, dias = :dias, email = :email, 
+                        email2 = :email2, url = :url WHERE numero = :numero";
+        $op=$con->prepare($sql);
+        $result=$op->execute(array(":numero"=>$numero, ":nombre"=>$nombre, ":apellidos"=>$apellidos, ":centro"=> $centro, 
+                                    ":idAula"=> $idAula, ":curso"=>$curso, ":horario"=>$horario, ":dias"=>$dias, 
+                                    ":email"=>$email, ":email2"=>$email2, ":url"=>$url));
+        return $result; 
+    }
+
+    function CovEliminarAlumno($numero){
+
+        try {
+            $con=PdoOpenCon();
+            $con->beginTransaction();
+
+
+            // Elimina el alumno
+            $sql = "DELETE FROM stFM2021 WHERE numero = " . $numero;
+            $con->exec($sql);
+
+            // Elimina las asistencias del alumno
+            $sql = "DELETE FROM stControlAsistencia WHERE numeroAlumno = " . $numero;
+            $con->exec($sql);
+
+            $con->commit();
+
+        } catch (\Throwable $e) {
+
+            $con->rollBack();
+            throw $e;
+        }
+
+        return true;
+       
+    }
+
+    function CovGetAlumno($numero){
+        $con=PdoOpenCon();
+        $sql="SELECT * FROM stFM2021 WHERE numero = :numero";
+        $recSet=$con->prepare($sql);
+        $recSet->execute(array(":numero"=>$numero));
+        return $recSet; 
     }
 
 

@@ -27,15 +27,9 @@
 <body>
 
     <ul class="nav nav-tabs">
-    <li class="nav-item">
-        <a data-toggle="tab" class="nav-link" href="#home">Grupos</a>
-    </li>
-    <li class="nav-item">
-        <a data-toggle="tab" class="nav-link" href="#menu1">Matriculas</a>
-    </li>
-    <li class="nav-item">
-        <a data-toggle="tab" class="nav-link" href="#menu2">Tablas</a>
-    </li>
+    <!-- <li class="nav-item">
+        <a data-toggle="tab" class="nav-link" href="#home">Alumnos</a>
+    </li> -->
     <li class="nav-item">
         <a data-toggle="tab" class="nav-link" href="#notificaciones">Notificaciones</a>
     </li>
@@ -45,20 +39,10 @@
     </ul>
 
     <div class="tab-content">
-        <div id="home" class="tab-pane fade in active">
-            <?php include("frmMttoMatriculas2021.php"); ?>
-        </div>
+        <!-- <div id="home" class="tab-pane fade in active">
+            <?php // include("frmMttoAlumnos2021.php"); ?>
+        </div> -->
         
-        <div id="menu1" class="tab-pane fade">
-            <!-- <h3>Menu 2</h3>
-            <p>Some content in menu 2.</p> -->
-        </div>
-
-        <div id="menu2" class="tab-pane fade">
-            <!-- <h3>Menu 2</h3>
-            <p>Some content in menu 2.</p> -->
-        </div>
-
         <div id="notificaciones" class="tab-pane fade in active">
             <?php include("frmNotificaciones.php"); ?>
         </div>

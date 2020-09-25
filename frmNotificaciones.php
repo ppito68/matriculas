@@ -67,6 +67,7 @@
                         <button onclick="GenerarAsistencias()" type="button" class="btn btn-primary" id="btnGenerar" disabled>Generar</button>            
                         <button onclick="EnviarEmails()" type="button" class="btn btn-success" id="btnEnviarEmail" disabled>Enviar Email</button>
                         <button onclick="EliminarAsistencias()" type="button" class="btn btn-danger">Eliminar</button>
+                        <a href="frmMttoAlumnos2021.php">Añadir Alumno</a>
                     </td>
                     <td>
 

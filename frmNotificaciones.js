@@ -23,22 +23,29 @@ $(document).ready(function() {
     Disponibilidadcontroles($('#cbxNotifFechas').val());
 })
 
-// function GetListaCentros() {
+function EliminarAlumno(numero) {
+    const confirma = confirm("Estás segur@ de eliminar el alumno " + numero + "?");
+    if (confirma) {
 
-//     $.ajax({
-//         type: "post",
-//         url: "GetHtmlSelectCentros.php",
-//         success: function(r) {
-//             $('#cbxNotifCentros').html(r);
-//             GetListaAulas();
-//         },
+        const param = {
+            numero: numero
+        }
 
-//         error: function(error) {
-//             console.log(error);
-//         }
-//     });
+        $.ajax({
+            type: "post",
+            url: "EliminarAlumno.php",
+            data: param,
+            success: function(r) {
+                ListaAsistencia();
+            },
 
-// }
+            error: function(error) {
+                console.log(error);
+            }
+        });
+
+    }
+}
 
 function GetListaAulas() {
 
