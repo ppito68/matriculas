@@ -97,7 +97,7 @@ while($alum=$alumnos->fetch(PDO::FETCH_ASSOC)){
 
         $html = $html . 
             '<td onclick="ConmutaAsistencia(\'' . $diaCal['fecha'] . '\', ' . $alum["numero"] . ', \'i' . $alum["numero"] . '-' . $f . '\')">
-                <img id="i' . $alum["numero"] . '-' . $f . '" src="' . GetUrlIconosAsistencia($alum[$f], $alum['com'.$f] ) . '" class="img-responsive"/>
+                <img id="i' . $alum["numero"] . '-' . $f . '" src="' . GetUrlIconosAsistencia($alum[$f], $alum['com'.$f], $alum['rec'.$f]) . '" class="img-responsive"/>
             </td>';
 
     }

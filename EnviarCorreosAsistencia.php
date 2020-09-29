@@ -9,6 +9,7 @@ $idAula = $_POST["idAula"];
 $curso = $_POST["curso"];
 $horario = $_POST["horario"];
 
+
 // obtiene el dia de la semana en letras
 $diaSemana = getDiaSemanaEnLetras(date("N", strtotime($fecha)));
 
@@ -40,6 +41,7 @@ while($grupo=$grupos->fetch(PDO::FETCH_ASSOC)){
                 $texto = "Hola, te escribimos desde City School:" . "\n" . "\n" .
                     $alumno['nombre'] . " " . $alumno['apellidos'] .  ", te comunicamos que, según nuestro control interno de asistencia, el próximo día " . $diaSemana . ", " . $fechaConFormato . " la clase para ti será PRESENCIAL. " . "\n" . "\n" .
                     "En caso de no poder asistir, te rogamos nos lo comuniques con antelación para que tu plaza pueda ser ocupada por otro compañero." . "\n" . "\n" .
+                    "Por favor, pulsa en el siguiente enlace para confirmar que ha recibido nuestro mensaje: https://www.cityschool.es/stf/cnf/wr.php?na=" . $alumno['numero'] . "&id=" . $alumno['idControlAsistencia'] . "\n" . "\n" .
                     "Muchas gracias por tu colaboración." . "\n" . "\n";
                 
                 $destinatario = $alumno['email']; 
@@ -55,8 +57,9 @@ while($grupo=$grupos->fetch(PDO::FETCH_ASSOC)){
             }elseif($alumno['asignado']=='o'){
 
                 $texto =  "Hola, te escribimos desde City School:" . "\n" . "\n" .
-                $alumno['nombre'] . " " . $alumno['apellidos'] .  ", te comunicamos que, según nuestro control interno de asistencia, el próximo día " . $diaSemana . ", " . $fechaConFormato . " la clase para ti será ON LINE, cuyo enlace de conexiÓn es el siguiente." . "\n" . "\n" .
+                $alumno['nombre'] . " " . $alumno['apellidos'] .  ", te comunicamos que, según nuestro control interno de asistencia, el próximo día " . $diaSemana . ", " . $fechaConFormato . " la clase para ti será ON LINE, cuyo enlace de conexión es el siguiente." . "\n" . "\n" .
                 $alumno['url']  . "\n" . "\n" .
+                "Por favor, pulsa en el siguiente enlace para confirmar que ha recibido nuestro mensaje: https://www.cityschool.es/stf/cnf/wr.php?na=" . $alumno['numero'] . "&id=" . $alumno['idControlAsistencia'] . "\n" . "\n" .
                 "Muchas gracias por tu colaboración." . "\n" . "\n";
 
                 $destinatario = $alumno['email']; 

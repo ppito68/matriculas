@@ -529,22 +529,27 @@
         // Tambien crea otra columna para la misma subcadena con las fechas en la que se notificó por email al alumno los modos 
         // de asistencias de cada día; para diferenciar el nombre de estas columnas con las de las asistencia, se antepone "com" 
         //  delante de la cadena fecha.
+        // Tambien crea otra columna con la fecha en la que el alumno leyó el email, si es que éste picó en el enlace de mensaje
+        //  recibido que se le envió en el cuerpo del email; se antepone la cadena "rec" delante para diferenciarla de las otras columnas
         $diasRecSet=CovGetDiasCalendario($fechaImparticion);
         $subCadenaDias = "";
         while($diaCal=$diasRecSet->fetch(PDO::FETCH_ASSOC)){
             $subCadenaDias = $subCadenaDias . ", ( SELECT modoAsistencia FROM stControlAsistencia c 
             WHERE c.numeroAlumno = fm.numero AND c.fecha = '" . $diaCal['fecha'] . "') AS '" . $diaCal['fecha'] . "', 
             ( SELECT fechaHoraComunicacion FROM stControlAsistencia c 
-            WHERE c.numeroAlumno = fm.numero AND c.fecha = '" . $diaCal['fecha'] . "') AS 'com" . $diaCal['fecha'] . "'";
+            WHERE c.numeroAlumno = fm.numero AND c.fecha = '" . $diaCal['fecha'] . "') AS 'com" . $diaCal['fecha'] . "',
+            ( SELECT fechaHoraRecibido FROM stControlAsistencia c 
+            WHERE c.numeroAlumno = fm.numero AND c.fecha = '" . $diaCal['fecha'] . "') AS 'rec" . $diaCal['fecha'] . "' ";
         }
         
-        // Crea una columna para saber qué tipo de asistencia hizo el ultimo dia de la seleccion para evitar que se repita la asitencia online si esa ultima vez fue online
-        $subCadenaDias .= ", (SELECT modoAsistencia 
-                                FROM stControlAsistencia 
-                                WHERE numeroAlumno = fm.numero 
-                                    AND fecha = (select max(fecha) from stControlAsistencia ca 
-                                                    where ca.numeroAlumno = fm.numero 
-                                                        and ca.fecha <= '" . $fechaImparticion . "')  ) as modoUltimaVez";
+        // Crea una columna para saber qué tipo de asistencia hizo el ultimo dia de la seleccion para evitar que se repita la 
+        //  asitencia online si esa ultima vez fue online
+        // $subCadenaDias .= ", (SELECT modoAsistencia 
+        //                         FROM stControlAsistencia 
+        //                         WHERE numeroAlumno = fm.numero 
+        //                             AND fecha = (select max(fecha) from stControlAsistencia ca 
+        //                                             where ca.numeroAlumno = fm.numero 
+        //                                                 and ca.fecha <= '" . $fechaImparticion . "')  ) as modoUltimaVez";
 
         // Cierra el cursor para liberar recursos
         $diasRecSet->closeCursor();
@@ -560,7 +565,8 @@
                     INNER JOIN ssAulas au ON au.id = fm.idAula
                 WHERE 1 = 1 " . $filtroCentro . $filtroAula . $filtroDiaSemana . $filtroCurso . $filtroHorario .
                 " GROUP BY au.Aula, fm.numero, fm.nombre, fm.apellidos, fm.curso, fm.horario, fm.dias
-                ORDER BY fm.horario, idAula, remoto, modoUltimaVez, fm.numero desc";
+                ORDER BY fm.horario, idAula, remoto, fm.numero desc"; //  ORDER BY fm.horario, idAula, remoto, modoUltimaVez, fm.numero desc";
+                 
         $recSet=$con->prepare($sql);
         $recSet->execute(array(':fecha'=>$fechaImparticion));
         return $recSet; 
@@ -648,7 +654,8 @@
                         where fecha < :fecha and  modoAsistencia = 'a' and numeroAlumno = fm.numero) as asiste, 
                     (select count(numeroAlumno) from stControlAsistencia 
                         where fecha < :fecha and  modoAsistencia = 'o' and numeroAlumno = fm.numero) as remoto, 
-                    ( select  modoAsistencia from stControlAsistencia where numeroAlumno = fm.numero and fecha = :fecha) as asignado 
+                    ( select  modoAsistencia from stControlAsistencia where numeroAlumno = fm.numero and fecha = :fecha) as asignado,
+                    (select id from stControlAsistencia where numeroAlumno = fm.numero and fecha = :fecha) as idControlAsistencia
             FROM stFM2021 fm 
                 INNER JOIN ssAulas au ON au.id = fm.idAula 
             WHERE 1 = 1 AND idCentro = :centro AND idAula = :idAula AND fm.curso = :curso and fm.horario = :horario " . $filtroDias . 
@@ -940,6 +947,7 @@
         return $recSet; 
     }
 
+    
 
 
     
