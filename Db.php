@@ -814,7 +814,7 @@
     }
 
     function CovGetHorarios($fecha, $idCentro, $idAula, $curso ){
-        $diaSemana = date("N", strtotime($fecha)); // obtiene el dia de la semana en cifra
+        $diaSemana = empty($fecha) ? 0 : date("N", strtotime($fecha)); // obtiene el dia de la semana en cifra
         $filtroDias = "";
         if($diaSemana == 1 || $diaSemana == 3){ // Lunes y Miercoles
             $filtroDias = " AND dias = 'M-W' ";

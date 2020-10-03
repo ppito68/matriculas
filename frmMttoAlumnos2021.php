@@ -82,7 +82,7 @@ $html = '<script>
               </div>
             </div>
             <button type="submit" class="btn btn-primary">Guardar</button>
-            <button type="button" onclick="PanelAsistencias()">VOLVER AL PANEL</button>
+            <button type="button" class="btn btn-secondary" onclick="PanelAsistencias()">VOLVER AL PANEL</button>
           </div>
         </form>';
 

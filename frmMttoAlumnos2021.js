@@ -64,7 +64,11 @@ function CargaComboCursosMttoAlumnos(cursoPreSelect) {
 function CargaComboHorariosMttoAlumnos(horarioPreSelect) {
 
     const params = {
-        horarioPreSelect: horarioPreSelect
+        horarioPreSelect: horarioPreSelect,
+        fecha: "",
+        idCentro: 0,
+        idAula: 0,
+        curso: ""
     }
 
     $.ajax({
