@@ -1,25 +1,4 @@
-<script>
-    function ConmutaAsistencia(fecha, numeroAlumno, id) {
 
-        const param = {
-            fecha: fecha,
-            numeroAlumno: numeroAlumno,
-        };
-
-        $.ajax({
-            type: "post",
-            url: "SetAsistencia.php",
-            data: param,
-            success: function(r) {
-                $('#'+id).replaceWith(r);
-            },
-
-            error: function (error){
-              console.log(error);
-            }
-        })
-    }
-</script>
 
 <?php
 
@@ -77,10 +56,15 @@ while($alum=$alumnos->fetch(PDO::FETCH_ASSOC)){
     $html = $html .        
         '<th scope="row">' . $alum["numero"] . '</th>
         <td>
-            <img src="./img/eliminarAlumno.svg" width="20px" height="20px" onclick="EliminarAlumno(' . $alum["numero"] . ')"> 
-            <a href="frmMttoAlumnos2021.php?numero=' . $alum["numero"] . '">' .        
+            <img src="./img/eliminarAlumno.svg" width="20px" height="20px" 
+                onclick="EliminarAlumno(' . $alum["numero"] . ')" 
+                style="cursor: pointer;"> 
+            <img src="./img/edit.svg" width="20px" height="20px" 
+                onclick="MttoAlumno(' . $alum["numero"] . ')" 
+                style="cursor: pointer;"> 
+            <span>' .
                 $alum["nombre"] . 
-            '</a>
+            '</span>
             <span class="small"> - ' 
                 . $alum["curso"] . ' - ' . $alum["Aula"] . ' - ' . $alum["dias"] . ' - ' . $alum["horario"] . 
             '</span>

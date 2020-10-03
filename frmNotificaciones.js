@@ -1,27 +1,23 @@
-$(document).ready(function() {
+function ConmutaAsistencia(fecha, numeroAlumno, id) {
 
-    $('#cbxNotifCentros').change(function() {
-        GetListaAulas();
-    });
+    const param = {
+        fecha: fecha,
+        numeroAlumno: numeroAlumno,
+    };
 
-    $('#cbxNotifFechas').change(function() {
-        ListaAsistencia();
-    });
+    $.ajax({
+        type: "post",
+        url: "SetAsistencia.php",
+        data: param,
+        success: function(r) {
+            $('#' + id).replaceWith(r);
+        },
 
-    $('#cbxNotifAulas').change(function() {
-        GetListaCursos();
-    });
-
-    $('#cbxNotifCursos').change(function() {
-        GetListaHorarios();
-    });
-
-    $('#cbxNotifHorarios').change(function() {
-        ListaAsistencia();
-    });
-
-    Disponibilidadcontroles($('#cbxNotifFechas').val());
-})
+        error: function(error) {
+            console.log(error);
+        }
+    })
+}
 
 function EliminarAlumno(numero) {
     const confirma = confirm("Estás segur@ de eliminar el alumno " + numero + "?");

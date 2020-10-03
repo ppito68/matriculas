@@ -790,21 +790,26 @@
         return $result; 
     }
 
-    function CovGetAllCursos(){
-        $sql="select distinct curso from stFM2021 order by curso";
-        $con=PdoOpenCon();
-        $recSet=$con->prepare($sql);
-        $recSet->execute(); 
-        return $recSet; 
-    }
+    // function CovGetAllCursos(){
+    //     $sql="select distinct curso from stFM2021 order by curso";
+    //     $con=PdoOpenCon();
+    //     $recSet=$con->prepare($sql);
+    //     $recSet->execute(); 
+    //     return $recSet; 
+    // }
 
-    function CovGetCursos($idCentro, $idAula, $diasSemana){
+    // La variable $orden: si 1 ordena por horario que es valor por defecto, si otro valor ordena por curso
+    function CovGetCursos($idCentro, $idAula, $diasSemana, $orden = 1){
+        $filtroCentro = $idCentro != 0 ? " AND fm.centro = " . $idCentro : ""; 
+        $filtroAula = $idAula != 0 ? " AND fm.idAula = " . $idAula : "";
+        $filtroDias = empty($diasSemana) ? "" : " AND dias = '" . $diasSemana . "'"; 
+        $sOrden = ($orden == 1) ? " ORDER BY fm.curso " : " ORDER BY fm.horario ";
+
         $sql="select distinct curso from stFM2021 fm
-                where fm.centro = :centro and fm.idAula = :idAula and fm.dias = :dias
-                order by fm.horario";
+                where 1 = 1 " . $filtroCentro . $filtroDias . $filtroAula . $sOrden;  //fm.centro = :centro and fm.idAula = :idAula and fm.dias = :dias
         $con=PdoOpenCon();
         $recSet=$con->prepare($sql);
-        $recSet->execute(array(":centro"=>$idCentro, ":idAula"=>$idAula, ":dias"=>$diasSemana));
+        $recSet->execute(); //array(":centro"=>$idCentro, ":idAula"=>$idAula, ":dias"=>$diasSemana));
         return $recSet; 
     }
 
@@ -821,7 +826,8 @@
         $filtroCurso = $curso != "" ? " AND fm.curso = '" . $curso . "' " : ""; 
         $con=PdoOpenCon();
         $sql="select distinct horario from stFM2021 fm
-                where 1 = 1 " . $filtroCentro . $filtroAula . $filtroCurso . $filtroDias;
+                where 1 = 1 " . $filtroCentro . $filtroAula . $filtroCurso . $filtroDias . 
+                ' order by horario';
         $recSet=$con->prepare($sql);
         $recSet->execute();
         return $recSet; 
@@ -949,7 +955,7 @@
 
     
 
-
+ 
     
 
 

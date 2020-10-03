@@ -8,9 +8,9 @@
     $cadenaHtml='<option value="0"></option>';
 
     // Si no viene el idCentro, no se cargan las aulas
-    if($idCentro!=0){
+    // if($idCentro!=0){
         $aulas=GetAulas($idCentro);
-    }
+    // }
 
     while($row=$aulas->fetch(PDO::FETCH_ASSOC)){ 
         $selected = ($idAulaPreSelect==$row["Id"]) ? "selected" : "";

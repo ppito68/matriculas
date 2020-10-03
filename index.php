@@ -21,31 +21,19 @@
             crossorigin="anonymous"></script>
     <script src="../js/bootstrap.min.js"></script>
 
+    <script src="index.js"></script>
+    <script src="frmNotificaciones.js"></script>
+    <script src="frmMttoAlumnos2021.js"></script>
 
 </head>
 
 <body>
 
-    <ul class="nav nav-tabs">
-    <!-- <li class="nav-item">
-        <a data-toggle="tab" class="nav-link" href="#home">Alumnos</a>
-    </li> -->
-    <li class="nav-item">
-        <a data-toggle="tab" class="nav-link" href="#notificaciones">Notificaciones</a>
-    </li>
-    <!-- <li class="nav-item">
-        <a class="nav-link disabled" href="#" tabindex="-1" aria-disabled="true">Disabled</a>
-    </li> -->
-    </ul>
-
-    <div class="tab-content">
-        <!-- <div id="home" class="tab-pane fade in active">
-            <?php // include("frmMttoAlumnos2021.php"); ?>
-        </div> -->
-        
-        <div id="notificaciones" class="tab-pane fade in active">
-            <?php include("frmNotificaciones.php"); ?>
-        </div>
+    <div id="mttoAlumno" class="container-fluid" style="display: none;">
+    </div>
+    
+    <div id="notificaciones" class="container-fluid" style="display: block;">
+        <?php include("frmNotificaciones.php"); ?>
     </div>
 
 </body>

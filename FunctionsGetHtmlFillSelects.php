@@ -15,7 +15,7 @@ function GetHtmlFillSelectCentros($idCentroSeleccionado){
 
 function GetHtmlFillSelectCursos($cursoPreSelect){
     $html='<option value="0"></option>';
-    $cursos=CovGetAllCursos();
+    $cursos=CovGetCursos(0,0,"",2); // el 2 es para que ordene por curso
     foreach($cursos as $curso){ 
         $selected=$cursoPreSelect==$curso["curso"] ? "selected" : "";
         $html = $html . '<option value="' . $curso["curso"] . '" ' . $selected . '>' . $curso["curso"] . '</option>';

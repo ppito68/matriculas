@@ -1,9 +1,6 @@
 <!-- Funciones para llenar las opciones de las listas de seleccion -->
 <?php require_once("FunctionsGetHtmlFillSelects.php"); ?>
     
-<script src="frmNotificaciones.js"></script>
-
-
 <!-- Contenedor de combos -->
 <div class="container-fluid" id="opciones">
     <div class="row mt-1">
@@ -67,42 +64,27 @@
                         <button onclick="GenerarAsistencias()" type="button" class="btn btn-primary" id="btnGenerar" disabled>Generar</button>            
                         <button onclick="EnviarEmails()" type="button" class="btn btn-success" id="btnEnviarEmail" disabled>Enviar Email</button>
                         <button onclick="EliminarAsistencias()" type="button" class="btn btn-danger">Eliminar</button>
-                        <a href="frmMttoAlumnos2021.php">Añadir Alumno</a>
+
+                        <!-- <a href="frmMttoAlumnos2021.php">Añadir Alumno</a> -->
+                        <button onclick="MttoAlumno(0)" type="button" class="btn btn-info">Añadir Alumno</button>
+
                     </td>
+
+                    <!-- Se deja una columna de la tabla vacía para haer coincidir la leyenda del aforo debajo del combo del aula -->
                     <td>
-
-                    <!-- <ul class="list-group">
-                        <li class="list-group-item d-flex justify-content-between align-items-center">
-                            Cras justo odio
-                            <span class="badge badge-primary badge-pill">14</span>
-                        </li>
-                        <li class="list-group-item d-flex justify-content-between align-items-center">
-                            Dapibus ac facilisis in
-                            <span class="badge badge-primary badge-pill">2</span>
-                        </li>
-                        <li class="list-group-item d-flex justify-content-between align-items-center">
-                            Morbi leo risus
-                            <span class="badge badge-primary badge-pill">1</span>
-                        </li>
-                    </ul> -->
-
-
                     </td>
+
                     <td>
                         <p id="aforo" class="small"></p>
                     </td>
                 </tr>
-            
-            
             </tbody>
-       
         </table>
-
     </div>
 </div>
 
 
 <hr>
 
-<!-- Contenedor de MAtriculas -->
+<!-- Contenedor del panel de asistencias -->
 <div class="container-fluid" id="alumnosContainer"></div>

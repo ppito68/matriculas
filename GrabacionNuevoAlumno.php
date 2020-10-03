@@ -19,12 +19,12 @@ $res=CovGetAlumno($numero);
 // si el alumno ya existía, lo modifica
 if($alum=$res->fetch(PDO::FETCH_ASSOC)){
 
-    // try {
+    try {
         $r = CovModificacionAlumno($numero, $nombre, $apellidos, $centro, $idAula, $curso, $horario, $dias, $email, $email2, $url);
-        // echo "El alumno se ha modificado correctamente";
-    // } catch (\Throwable $th) {
-        // echo 'ha ocurrido un error al modificar el alumno.';
-    // }
+        echo "El alumno se ha modificado correctamente";
+    } catch (\Throwable $th) {
+        echo 'ha ocurrido un error al modificar el alumno.';
+    }
 
 
 
@@ -45,4 +45,4 @@ if($alum=$res->fetch(PDO::FETCH_ASSOC)){
 
 ?>
 
-<a href="index.php">VOLVER</a>
+<a href="index.php">VOLVER AL PANEL</a>
