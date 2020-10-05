@@ -8,8 +8,7 @@
     $idAula=$_POST["idAula"];
     $fecha = $_POST["fecha"];
     $cursoPreSelect = $_POST['cursoPreSelect'];
-
-    $nDiaSemana = date("N", strtotime($fecha)); // obtiene el dia de la semana en cifra
+    $nDiaSemana = isset($fecha) ? date("N", strtotime($fecha)) : 0; // obtiene el dia de la semana en cifra
     $sDiasSemana = "";
     if($nDiaSemana == 1 || $nDiaSemana == 3){ // Lunes y Miercoles
         $sDiasSemana = "M-W";
