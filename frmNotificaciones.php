@@ -60,20 +60,17 @@
             <!-- Contenedor de botones -->
             <tbody>
                 <tr>
-                    <td>
+                    
+                    <!-- colspan=2 lo que hace es abarcar dos celdas de la tabla en horizontal para que quepan los botones  -->
+                    <td colspan="2">
+
                         <button onclick="GenerarAsistencias()" type="button" class="btn btn-primary" id="btnGenerar" disabled>Generar</button>            
                         <button onclick="EnviarEmails()" type="button" class="btn btn-success" id="btnEnviarEmail" disabled>Enviar Email</button>
                         <button onclick="EliminarAsistencias()" type="button" class="btn btn-danger">Eliminar</button>
-
-                        <!-- <a href="frmMttoAlumnos2021.php">Añadir Alumno</a> -->
                         <button onclick="MttoAlumno(0)" type="button" class="btn btn-info">Añadir Alumno</button>
+                        <div id="cantidadAlumnos" class="badge badge-primary text-wrap" style="width: 6rem;"></div>
 
                     </td>
-
-                    <!-- Se deja una columna de la tabla vacía para haer coincidir la leyenda del aforo debajo del combo del aula -->
-                    <td>
-                    </td>
-
                     <td>
                         <p id="aforo" class="small"></p>
                     </td>

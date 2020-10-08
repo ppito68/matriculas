@@ -151,6 +151,24 @@ function ListaAsistencia() {
         horario: $('#cbxNotifHorarios').val()
     }
 
+    // Visualizacion total de alumnos del centro seleccionado
+
+    console.log(param.idCentro);
+
+    $.ajax({
+        type: "get",
+        url: "GetTotalAlumnos.php",
+        data: { centro: param.idCentro },
+        success: function(r) {
+            $('#cantidadAlumnos').html(r);
+        },
+
+        error: function(error) {
+            console.log(error);
+        }
+
+    })
+
     Disponibilidadcontroles(param.fecha);
 
 

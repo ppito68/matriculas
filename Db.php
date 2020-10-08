@@ -953,6 +953,15 @@
         return $recSet; 
     }
 
+
+    function CovGetTotalAlumnos($centro){
+        $con=PdoOpenCon();
+        $sql="SELECT count(*) as total FROM stFM2021 WHERE centro = :centro";
+        $recSet=$con->prepare($sql);
+        $recSet->execute(array(":centro"=>$centro));
+        return $recSet->fetch(PDO::FETCH_ASSOC);
+    }
+
     
 
  
