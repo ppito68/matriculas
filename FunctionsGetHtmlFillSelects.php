@@ -72,7 +72,7 @@ function GetUrlIconosAsistencia($modoAsistencia, $fechaComunicacionEmail, $fecha
                 $url="./img/asist_EnviadoLeido.png";
             }
         }
-    } else if ($modoAsistencia=="o"){
+    } elseif ($modoAsistencia=="o"){
         
         // Si no se ha enviado email al alumno, coloca el icono de REMOTO sin el sobre de enviado
         if(is_null($fechaComunicacionEmail)){
@@ -89,7 +89,9 @@ function GetUrlIconosAsistencia($modoAsistencia, $fechaComunicacionEmail, $fecha
             }
         }
 
-    } 
+    } elseif($modoAsistencia=="n"){
+        $url="./img/NoAsiste.png";
+    }
 
     return $url;
 }
