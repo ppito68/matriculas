@@ -1,9 +1,8 @@
 
-
 <?php
 
 require_once("Db.php");
-require_once("FunctionsGetHtmlFillSelects.php");
+require_once("funcionesVarias.php");
 
 $idCentro=$_POST["idCentro"];
 $fecha = $_POST["fecha"];
@@ -13,7 +12,19 @@ $horario = $_POST["horario"];
 
 // ****************************** C A B E C E R A *********************************
 
-$html = //'<div class="container-fluid">
+$html = "<script>
+            function ocultar(ap, ar){
+                document.getElementById(ap).style.display = 'none';
+                document.getElementById(ar).style.display = 'block';
+            }
+
+            function mostrar(ap, ar){
+                document.getElementById(ap).style.display = 'block';            
+                document.getElementById(ar).style.display = 'none';
+            }
+        </script>";
+
+$html .= //'<div class="container-fluid">
          '   <table class="table table-striped table-sm">
                 <thead class="thead-light">
                     <tr>
@@ -33,7 +44,7 @@ foreach($diasArray as  $diaCal){
     $diaFormat = date("d/m", strtotime($diaCal['fecha']));
     
     // $html = $html . '<div class="col-auto bg-light lead text-uppercase" id="d' . $diaFormat . '" style="font-size: small">' . $diaFormat . '</div>';
-    $html = $html . '<th scope="col-auto">' . $diaFormat . '</th>';
+    $html = $html . '<th align="center" scope="col-auto">' . $diaFormat . '</th>';
 }
 $diasRecSet->closeCursor();
 
@@ -65,8 +76,9 @@ while($alum=$alumnos->fetch(PDO::FETCH_ASSOC)){
             <span>' .
                 $alum["nombre"] . 
             '</span>
-            <span class="small"> - ' 
-                . $alum["curso"] . ' - ' . $alum["Aula"] . ' - ' . $alum["dias"] . ' - ' . $alum["horario"] . 
+            <span class="small"> - ' .
+                $alum["curso"] . ' - ' . $alum["Aula"] . ' - ' . $alum["dias"] . ' - ' .
+                $alum["horario"] . ' - ' . $alum["profesor"] . 
             '</span>
         </td>';
         // <td>' . $alum["dias"] . '</td>
@@ -76,13 +88,37 @@ while($alum=$alumnos->fetch(PDO::FETCH_ASSOC)){
     // añade las columnas de los dias de asistencia del alumno
     foreach($diasArray as $diaCal){
         
-        
         $f=$diaCal['fecha'];
 
+        // si tiene establecida la asistencia real, añade el html de la imagen para el popUp que muetra el icono de la aistencia
+        //      prevista.
+        $imgPopUp = ($alum['real'.$f])  ? '<img id="ipop' . $alum["numero"] . '-' . $f . '" 
+                                                style="display: none"
+                                                src="' . GetUrlIconosAsistencia($alum[$f], 
+                                                                                $alum['real'.$f], 
+                                                                                $alum['com'.$f], 
+                                                                                $alum['rec'.$f], 
+                                                                                $alum['man'.$f],
+                                                                                true) . '"
+                                            />'
+                                        : '';
+
         $html = $html . 
-            '<td onclick="ConmutaAsistencia(\'' . $diaCal['fecha'] . '\', ' . $alum["numero"] . ', \'i' . $alum["numero"] . '-' . $f . '\')">
-                <img id="i' . $alum["numero"] . '-' . $f . '" src="' . GetUrlIconosAsistencia($alum[$f], $alum['com'.$f], $alum['rec'.$f]) . '" class="img-responsive"/>
-            </td>';
+            '<td onclick="ConmutaAsistencia(\'' . $diaCal['fecha'] . '\', ' . $alum["numero"] . ', \'i' . $alum["numero"] . '-' . $f . '\')"
+                onmouseover="mostrar(\'ipop' . $alum["numero"] . '-' . $f . '\', \'i' . $alum["numero"] . '-' . $f . '\')" 
+                onmouseout="ocultar(\'ipop' . $alum["numero"] . '-' . $f . '\', \'i' . $alum["numero"] . '-' . $f . '\')" 
+                style="cursor: pointer; ' . 
+                    SetColorBackGround( $alum[$f], $alum['real'.$f] ) . '"  
+                align="center" valign="middle">
+                <img id="i' . $alum["numero"] . '-' . $f . '" 
+                    src="' . GetUrlIconosAsistencia($alum[$f], 
+                                                    $alum['real'.$f], 
+                                                    $alum['com'.$f], 
+                                                    $alum['rec'.$f], 
+                                                    $alum['man'.$f]) . '" 
+                />' . 
+                $imgPopUp . '
+            </td>'; 
 
     }
     

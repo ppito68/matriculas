@@ -21,7 +21,7 @@ function cmp($a, $b){
 
 // obtiene los dias comprometidos del calendario escolar desde el inicio de curso hasta el dia de la fecha para usarlo en (*1) para
 // conseguir el orden correcto en el que deben estar los alumnos para asignarle sus asistencias correspondientes
-$diasRecSet=CovGetDiasCalendario($fecha, false, false); // el primer false es para que no filtre el mes de la fecha. El segundo false es para que no incluya el $fecha en la consulta
+$diasRecSet=CovGetDiasCalendario($fecha, false, false); // el primer false es para que no filtre el mes de la fecha. El segundo false es para que no incluya el parámetro $fecha en la consulta
 $diasArray = $diasRecSet->fetchAll(); // se pasa a un array porque hay que recorrelo varias veces
 
 
@@ -43,19 +43,32 @@ while($grupo=$grupos->fetch(PDO::FETCH_ASSOC)){
     // Obtener el total de las asistencias ya fijadas en la fecha del proceso y restar esos modos de asistencia a los aforos del grupo
     $PrefijadosAsistidos = CovGetTotalAsistidos($fecha, $centroGrupo, $idAulaGrupo, $cursoGrupo, $horarioGrupo);
     $prefijadosOnLine = CovGetTotalOnLine($fecha, $centroGrupo, $idAulaGrupo, $cursoGrupo, $horarioGrupo);
-    
+    $prefijadosAusentes = CovGetTotalAusencias($fecha, $centroGrupo, $idAulaGrupo, $cursoGrupo, $horarioGrupo);
+
     // Calcula el total de las asistencias ON LINE  que se deben asignar RESTANDO las ya asignadas al total aforo_covid del grupo
-    $onLine = $grupo['online'] - $prefijadosOnLine;
-    $Asisten = $grupo['asisten'] - $PrefijadosAsistidos;
+    //  Resta tambien los ausentes pues dejan plaza libre tambien para presenciales.
+    $onLine = $grupo['online'] - $prefijadosOnLine - $prefijadosAusentes;
+
+    $asisten = $grupo['asisten'] - $PrefijadosAsistidos; // esto no se usa, pero lo dejo para posibles calculos en el futuro
 
     // obtener los alumnos del grupo en curso
-    $alumnosArray = array(); // en este aray se va metidneo los datos del alumno que luwego se usa para grabar las asistencias
+    $alumnosArray = array(); // en este aray se va introduciendo los datos del alumno que luwego se usa para grabar las asistencias
     $alumnos = CovGetAsistenciasGrupo($fecha, $centroGrupo, $idAulaGrupo, $cursoGrupo, $horarioGrupo);
     while($alumno=$alumnos->fetch(PDO::FETCH_ASSOC)){ 
 
-        // calculo de puntos segun sus asistencias online en las fechas anteriores a la fecha solicitada
+        /* Cálculo del orden de asignacion del modo de asistencia ONLINE:
+
+         1º El primer orden que se establece es la cantidad de asistencia ONLINE que ya haya realizado cada alumno.
+              Este orden es Ascendente, es decir, los alumnos que MENOS asistencias ONLINE hayan hecho serán los primeros en 
+              asignarle la asistencia ONLINE. Si en este orden existen empates, se establece el siguiente orden.
+         2º El segundo orden: A igualdad de asistencias remotas entre dos o mas alumnos (orden anterior), este orden tiene en cuenta 
+                los dias transcurridos desde sus ultimas veces ONLINE, asignando a cada alumno, de mayor a menor,  una puntuación
+                dependiendo de dichos días transcurridos. Cuanto más días transcurridos, mas puntos le asigna al alumno, por lo
+                que este orden es Descendente.
+         3º Este orden se establece si aun aplicando los ordenes anteriores, continua hyabiendo empates. Por desempatar de alguna
+                manera, este orden establece el numero de alumno, y será Descendente para dar una falsa prioridad de antigüedad.  */  
         $puntos = 0;
-        $puntosDelDia = count($diasArray);
+        $puntosDelDia = count($diasArray); // variable que guarda los puntos iniciales a asignar y que va disminuyendo en 1 por cada iteracion de asignacion de puntos
         foreach($diasArray as $dia){ // recorre todas las fecha lectivas anteriores a la fecha solicitada para ver las clases online hechas
             $puntos += covEsOnline($alumno['numero'], $dia['fecha']) ? $puntosDelDia : 0; // verifica que el dia ha sido online o no
             $puntosDelDia--; // resta uno para que que el dia siguiente sume menos puntos 
@@ -70,8 +83,8 @@ while($grupo=$grupos->fetch(PDO::FETCH_ASSOC)){
     $alumnos->closeCursor;
 
     // ordena el array por cantidad de asistencias online como primer orden ascendente, y por puntos descendente por el segundo orden
-    $colPuntos = array_column($alumnosArray, 'puntos');
     $colRemotos = array_column($alumnosArray, 'remoto');
+    $colPuntos = array_column($alumnosArray, 'puntos');
     $colNumeros = array_column($alumnosArray, 'numero');
     array_multisort($colRemotos, SORT_ASC, $colPuntos, SORT_DESC, $colNumeros, SORT_DESC, $alumnosArray);
 

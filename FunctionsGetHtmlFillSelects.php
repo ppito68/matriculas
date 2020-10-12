@@ -13,6 +13,16 @@ function GetHtmlFillSelectCentros($idCentroSeleccionado){
     return $html;
 }
 
+function GetHtmlFillDiasSemana($idDiaSeleccionado){
+    $html='<option value="0"></option>';
+    $dias=CovGetDiasSemana();
+    foreach($dias as $dia){ 
+        $selected=$idDiaSeleccionado==$dia["id"] ? "selected" : "";
+        $html = $html . '<option value="' . $dia["id"] . '" ' . $selected . '>' . $dia["dias"] . '</option>';
+    }
+    return $html;
+}
+
 function GetHtmlFillSelectCursos($cursoPreSelect){
     $html='<option value="0"></option>';
     $cursos=CovGetCursos(0,0,"",2); // el 2 es para que ordene por curso
@@ -33,9 +43,9 @@ function GetHtmlFillSelectAulas($idAulaPreSelect){
     return $html;
 }
 
-function GetHtmlFillSelectFechas($idPromocion){
+function GetHtmlFillSelectFechas($idPromocion, $diasArray){
     $html='<option value="0"></option>';
-    $fechas=GetFechasCalendario($idPromocion);
+    $fechas=GetFechasCalendario($idPromocion, $diasArray);
     foreach($fechas as $fecha){ 
         $html = $html . '<option value="' . $fecha["fecha"] . '">' . $fecha["diaSemanaYFecha"] . '</option>';
     }
@@ -52,48 +62,6 @@ function GetHtmlFillSelectHorarios($horarioPreSelect){
     return $html;
 }
 
-// $fechaComunicacionEmail: Es la fecha en la que se conunicó por email al alumno el modo de asistencia a la clase, Puede ser NULL porque
-//  no se haya notificado aun.
-function GetUrlIconosAsistencia($modoAsistencia, $fechaComunicacionEmail, $fechaRecibidoEmail){
-    $url="";
-    if($modoAsistencia=="a"){
 
-        // Si no se ha enviado email al alumno, coloca el icono de ASINTENCIAL sin el sobre de enviado
-        if(is_null($fechaComunicacionEmail)){
-            $url="./img/asist.png";
-        
-        }else{ // Si se ha enviadoi email al alumno
-
-            // Si no ha marcado el email comoleido, colocal el icono de asintencial pero con el sobre ROJO
-            if(is_null($fechaRecibidoEmail)){
-                $url="./img/asist_EnviadoSinLeer.png";
-            
-            }else{// Si el alumno ha leido el email, coloca el icono de asistencial con el sobre VERDE
-                $url="./img/asist_EnviadoLeido.png";
-            }
-        }
-    } elseif ($modoAsistencia=="o"){
-        
-        // Si no se ha enviado email al alumno, coloca el icono de REMOTO sin el sobre de enviado
-        if(is_null($fechaComunicacionEmail)){
-            $url="./img/remote.png";
-        
-        }else{ // Si se ha enviadoi email al alumno
-
-              // Si el alumno no ha marcado el email como leido, colocal el icono de REMOTO pero con el sobre ROJO
-              if(is_null($fechaRecibidoEmail)){
-                $url="./img/Remote_EnviadoSinLeer.png";
-            
-            }else{// Si el alumno ha leido el email, coloca el icono de REMOTO con el sobre VERDE
-                $url="./img/Remote_EnviadoLeido.png";
-            }
-        }
-
-    } elseif($modoAsistencia=="n"){
-        $url="./img/NoAsiste.png";
-    }
-
-    return $url;
-}
 
 ?>

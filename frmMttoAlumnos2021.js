@@ -18,8 +18,6 @@ function CargaComboCentrosMttoAlumnos(idCentroPreSelect) {
     });
 }
 
-
-
 function CargaComboAulasMttoAlumnos(idCentro, idAulaPreSelect) {
 
     const params = {
@@ -33,6 +31,26 @@ function CargaComboAulasMttoAlumnos(idCentro, idAulaPreSelect) {
         data: params,
         success: function(r) {
             $('#cbxMttoAulas').html(r);
+        },
+
+        error: function(error) {
+            console.log(error);
+        }
+    });
+}
+
+function CargaComboProfesoresMttoAlumnos(idProfesorPreSelect) {
+
+    const params = {
+        idProfesorPreSelect: idProfesorPreSelect
+    }
+
+    $.ajax({
+        type: "post",
+        url: "GetHtmlSelectProfesores.php",
+        data: params,
+        success: function(r) {
+            $('#cbxMttoProfesores').html(r);
         },
 
         error: function(error) {

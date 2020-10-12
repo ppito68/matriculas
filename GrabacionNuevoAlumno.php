@@ -5,6 +5,7 @@ $nombre = $_POST["nombre"];
 $apellidos = $_POST["apellidos"];
 $centro = $_POST["centro"];
 $idAula = $_POST["aula"];
+$idProfesor = $_POST["profesor"];
 $curso = $_POST["curso"];
 $horario = $_POST["horario"];
 $dias = $_POST["dias"];
@@ -20,7 +21,8 @@ $res=CovGetAlumno($numero);
 if($alum=$res->fetch(PDO::FETCH_ASSOC)){
 
     try {
-        $r = CovModificacionAlumno($numero, $nombre, $apellidos, $centro, $idAula, $curso, $horario, $dias, $email, $email2, $url);
+        $r = CovModificacionAlumno($numero, $nombre, $apellidos, $centro, $idAula, $curso, $horario, $dias, $email, $email2, 
+                                    $url, $idProfesor);
         echo "El alumno se ha modificado correctamente";
     } catch (\Throwable $th) {
         echo 'ha ocurrido un error al modificar el alumno.';
@@ -31,7 +33,8 @@ if($alum=$res->fetch(PDO::FETCH_ASSOC)){
 }else{ // si NO existía el alumno, lo graba nuevo
 
     try {
-        $r = CovGrabacionAlumno($numero, $nombre, $apellidos, $centro, $idAula, $curso, $horario, $dias, $email, $email2, $url);
+        $r = CovGrabacionAlumno($numero, $nombre, $apellidos, $centro, $idAula, $curso, $horario, $dias, $email, $email2, 
+                                $url, $idProfesor);
         echo "El alumno se ha grabado correctamente";
     } catch (\Throwable $th) {
         echo 'ha ocurrido un error al crear el alumno';

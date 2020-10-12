@@ -9,10 +9,10 @@ $alum=$result->fetch(PDO::FETCH_ASSOC);
 
   
 $html = '<script>
-          $("#cbxMttoCentros").change(function() {
-            var idCentro=$("#cbxMttoCentros").val();
-            CargaComboAulasMttoAlumnos(idCentro, ' . $alum['idAula'] . ');
-          });
+            $("#cbxMttoCentros").change(function() {
+              var idCentro=$("#cbxMttoCentros").val();
+              CargaComboAulasMttoAlumnos(idCentro, ' . $alum['idAula'] . ');
+            });
         </script>
         <form action="GrabacionNuevoAlumno.php" method="post">
           <div class="container-fluid mt-3">
@@ -53,6 +53,11 @@ $html = '<script>
                 <label for="cbxMttoAulas">Aula</label>
                 <select id="cbxMttoAulas" class="form-control" name="aula" required>
                                                 <!-- php: echo GetHtmlFillSelectAulas($alum[idAula]) -->
+                </select>
+              </div>
+              <div class="form-group col-md-2">
+                <label for="cbxMttoProfesores">Profesor</label>
+                <select id="cbxMttoProfesores" class="form-control" name="profesor" required>
                 </select>
               </div>
               <div class="form-group col-md-2">

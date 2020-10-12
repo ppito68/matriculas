@@ -1,9 +1,13 @@
 $(document).ready(function() {
 
     // Combos del Panel de asistencias
-    $('#cbxNotifCentros').change(function() {
+    $('#cbxNotifCentros').change(() => {
         GetListaAulas();
     });
+
+    $('#cbxNotifDiasSemana').change(() => {
+        GetListaFechas();
+    })
 
     $('#cbxNotifFechas').change(function() {
         ListaAsistencia();
@@ -45,6 +49,7 @@ function MttoAlumno(numero) {
                 $('#mttoAlumno').html(r);
                 CargaComboCentrosMttoAlumnos(alumno.centro);
                 CargaComboAulasMttoAlumnos(alumno.centro, alumno.idAula);
+                CargaComboProfesoresMttoAlumnos(alumno.idProfesor);
                 CargaComboCursosMttoAlumnos(alumno.curso);
                 CargaComboHorariosMttoAlumnos(alumno.horario);
             },

@@ -25,6 +25,18 @@
     <script src="frmNotificaciones.js"></script>
     <script src="frmMttoAlumnos2021.js"></script>
 
+    <style type="text/css">
+        body { padding-top: 100px; } 
+
+        #opciones {
+            width: 100%;
+            background: #f1891e;
+            left: 0;
+            top: 0;
+            position: fixed; 
+        }
+    </style>
+
 </head>
 
 <body>
@@ -32,9 +44,10 @@
     <div id="mttoAlumno" class="container-fluid" style="display: none;">
     </div>
     
-    <div id="notificaciones" class="container-fluid" style="display: block;">
+    <!-- <div id="notificaciones" class="container-fluid" style="display: block;"> -->
+    <header id="notificaciones" >
         <?php include("frmNotificaciones.php"); ?>
-    </div>
+    </header>
 
 </body>
 </html>

@@ -457,13 +457,33 @@
         return $recSet; 
     }
 
-    function GetFechasCalendario($idPromocion){
+    function GetProfesores(){
         $con=PdoOpenCon();
+        $sql="SELECT * FROM stProfesores order by nombre" . $filtroCentro;
+        $recSet=$con->prepare($sql);
+        $recSet->execute();
+        return $recSet; 
+    }
+
+    function GetFechasCalendario($idPromocion, $diasArray){
+        $con=PdoOpenCon();
+
+        // Filtro de los días de la semana
+        $filtroDias = "";
+        $lenArray = count($diasArray);
+        if( $lenArray > 0 ){
+            $filtroDias = " AND (";
+            for($n=0;$n < $lenArray; $n++){
+                $filtroDias .= " diaSemana = " . $diasArray[$n] . ( ($n < $lenArray - 1) ? " OR" : "" );
+            }
+            $filtroDias .= ")";
+        }
+
         $sql="SELECT fecha, concat( 
                 ELT(WEEKDAY(fecha) + 1, 'Lunes', 'Martes', 'Miercoles', 'Jueves', 'Viernes', 'Sabado', 'Domingo'), 
                 ' - ', day(fecha), '/', month(fecha), '/', year(fecha)
                                     ) as diaSemanaYFecha
-                FROM stCalendario WHERE idPromocion = :idPromocion";
+                FROM stCalendario WHERE idPromocion = :idPromocion" . $filtroDias;
         $recSet=$con->prepare($sql);
         $recSet->execute(array(':idPromocion'=>$idPromocion));
         return $recSet; 
@@ -525,37 +545,40 @@
         $con=PdoOpenCon();
 
         // Obtiene los dias del calendario escolar del mes recibido para montar la subcadena de la consulta principal
-        //  que monta las columna con la forma de asistencia de esos dias; el nombre de cada coluna es la cadena fecha de asistencia
-        // Tambien crea otra columna para la misma subcadena con las fechas en la que se notificó por email al alumno los modos 
-        // de asistencias de cada día; para diferenciar el nombre de estas columnas con las de las asistencia, se antepone "com" 
-        //  delante de la cadena fecha.
-        // Tambien crea otra columna con la fecha en la que el alumno leyó el email, si es que éste picó en el enlace de mensaje
-        //  recibido que se le envió en el cuerpo del email; se antepone la cadena "rec" delante para diferenciarla de las otras columnas
+        //  que monta una columna por cada uno de los dias del calendario obtenidos con la forma de asistencia de cada dia; 
+        //  el nombre de cada coluna es formado por la cadena del valor del campo fecha de asistencia.
+        // Tambien crea tantas columnas como días obtenidos con los modos de asistencias REALES; para diferenciar el nombre 
+        //      de estas columnas con las de las asistencia, se antepone "real" delante de la cadena formada por el valor del
+        //      campo fecha de asistencia.
+        // Tambien crea tantas columnas como días obtenidos con las fechas en la que se notificó por email al alumno los modos 
+        //      de asistencias de cada día; para diferenciar el nombre de estas columnas con las de las asistencia, se antepone 
+        //      "com" delante de la cadena formada por el valor del campo fecha de asistencia.
+        // Tambien crea tantas columnas como días obtenidos con la fecha en la que el alumno leyó el email, si es que éste picó 
+        //      en el enlace de acuse de recibo del mensaje recibido que se le envió en el cuerpo del email; se antepone la cadena 
+        //      "rec" delante de la cadena formada por el valor del campo fecha de asistencia para diferenciarla de las otras columnas.
+        // Añadida tambien tantas columnas como dias obtenidos donde se octiene si la asisgnacion del modo fue de forma manual o 
+        //      generada por la aplicacion, anteponiendole la cadena 'man' delante de la fecha
         $diasRecSet=CovGetDiasCalendario($fechaImparticion);
         $subCadenaDias = "";
         while($diaCal=$diasRecSet->fetch(PDO::FETCH_ASSOC)){
             $subCadenaDias = $subCadenaDias . ", ( SELECT modoAsistencia FROM stControlAsistencia c 
             WHERE c.numeroAlumno = fm.numero AND c.fecha = '" . $diaCal['fecha'] . "') AS '" . $diaCal['fecha'] . "', 
+            ( SELECT modoAsistenciaReal FROM stControlAsistencia  
+            WHERE numeroAlumno = fm.numero AND fecha = '" . $diaCal['fecha'] . "') AS 'real" . $diaCal['fecha'] . "',
             ( SELECT fechaHoraComunicacion FROM stControlAsistencia c 
             WHERE c.numeroAlumno = fm.numero AND c.fecha = '" . $diaCal['fecha'] . "') AS 'com" . $diaCal['fecha'] . "',
             ( SELECT fechaHoraRecibido FROM stControlAsistencia c 
-            WHERE c.numeroAlumno = fm.numero AND c.fecha = '" . $diaCal['fecha'] . "') AS 'rec" . $diaCal['fecha'] . "' ";
+            WHERE c.numeroAlumno = fm.numero AND c.fecha = '" . $diaCal['fecha'] . "') AS 'rec" . $diaCal['fecha'] . "', 
+            ( SELECT asignacionManual FROM stControlAsistencia  
+            WHERE numeroAlumno = fm.numero AND fecha = '" . $diaCal['fecha'] . "') AS 'man" . $diaCal['fecha'] . "' ";
         }
         
-        // Crea una columna para saber qué tipo de asistencia hizo el ultimo dia de la seleccion para evitar que se repita la 
-        //  asitencia online si esa ultima vez fue online
-        // $subCadenaDias .= ", (SELECT modoAsistencia 
-        //                         FROM stControlAsistencia 
-        //                         WHERE numeroAlumno = fm.numero 
-        //                             AND fecha = (select max(fecha) from stControlAsistencia ca 
-        //                                             where ca.numeroAlumno = fm.numero 
-        //                                                 and ca.fecha <= '" . $fechaImparticion . "')  ) as modoUltimaVez";
-
         // Cierra el cursor para liberar recursos
         $diasRecSet->closeCursor();
 
         // Consulta principal
         $sql = "SELECT au.Aula, fm.numero, CONCAT(fm.apellidos, ', ' , fm.nombre) as nombre, fm.curso, fm.horario, fm.dias, 
+                    p.nombre as profesor, 
                     (select count(numeroAlumno) from stControlAsistencia  
      	                where fecha <= :fecha and  modoAsistencia = 'a' and numeroAlumno = fm.numero) as asiste, 
 	                (select count(numeroAlumno) from stControlAsistencia  
@@ -563,9 +586,10 @@
                 $subCadenaDias . 
                 " FROM stFM2021 fm 
                     INNER JOIN ssAulas au ON au.id = fm.idAula
+                    LEFT JOIN stProfesores p ON p.id = fm.idProfesor
                 WHERE 1 = 1 " . $filtroCentro . $filtroAula . $filtroDiaSemana . $filtroCurso . $filtroHorario .
                 " GROUP BY au.Aula, fm.numero, fm.nombre, fm.apellidos, fm.curso, fm.horario, fm.dias
-                ORDER BY fm.horario, idAula, remoto, fm.numero desc"; //  ORDER BY fm.horario, idAula, remoto, modoUltimaVez, fm.numero desc";
+                ORDER BY fm.horario, idAula, fm.apellidos, fm.numero desc";
                  
         $recSet=$con->prepare($sql);
         $recSet->execute(array(':fecha'=>$fechaImparticion));
@@ -605,6 +629,15 @@
         return $diasRecSet;
     }
 
+    function CovGetDiasSemana(){
+        $con=PdoOpenCon();
+        $sql="SELECT * FROM ssDiasSemana";
+        $recSet=$con->prepare($sql);
+        $recSet->execute();
+        return $recSet; 
+    }
+
+
   
     // Devuelve el total de asistencias según el modo de asistencia, fecha, centro, aula, curso y horario recibido como parametro 
     // Esta funcion es llamada por otras dos funciones: CovGetTotalAsistidos(...) y CovGetTotalOnLine(...),  que suministran a 
@@ -632,6 +665,11 @@
         return CovGetAsistenciasGeneradas('o', $fecha, $centro, $idAula, $curso, $horario);
     }
 
+      // Devuelve la cantidad total de AUSENCIAS en una fecha, centro, aula, curso y horario determinado
+      function CovGetTotalAusencias($fecha, $centro, $idAula, $curso, $horario){
+        return CovGetAsistenciasGeneradas('n', $fecha, $centro, $idAula, $curso, $horario);
+    }
+
     // Obtiene los alumnos de un grupo con el total de asistencias A CLASE y el total de asistencias ONLINE, ordenados por
     //  los alumnos que mas han asistidos a clase hasta los que menos. Estos totales son calculados con la fecha ANTERIOR  a la 
     // recibida como parametro $fecha, ya que las nuevas asignaciones se van a realizar en la fecha recibida.
@@ -649,7 +687,7 @@
         }
         
         $con=PdoOpenCon();
-        $sql="SELECT fm.numero, fm.nombre, fm.apellidos, fm.url, fm.email, 
+        $sql="SELECT fm.numero, fm.nombre, fm.apellidos, fm.url, fm.email, fm.comunicarAsistencia,
                     (select count(numeroAlumno) from stControlAsistencia 
                         where fecha < :fecha and  modoAsistencia = 'a' and numeroAlumno = fm.numero) as asiste, 
                     (select count(numeroAlumno) from stControlAsistencia 
@@ -671,7 +709,10 @@
 
     function covEsOnline($numeroAlumno, $fecha){
         $con=PdoOpenCon();
-        $sql="select if(modoAsistencia='o', 1,0) as r
+        $sql="select fecha, if(modoAsistenciaReal is null, 
+                                        if(modoAsistencia = 'o', 1, 0), 
+                                        if(modoAsistenciaReal = 'o', 1, 0)
+                              ) as r
                 from stControlAsistencia where numeroAlumno = :numero and fecha = :fecha";
         $recSet=$con->prepare($sql);
         $recSet->execute(array(':fecha'=>$fecha, ':numero'=>$numeroAlumno));
@@ -727,7 +768,7 @@
             foreach($asistencias as $asist){
 
                 $sql = "DELETE FROM stControlAsistencia WHERE numeroAlumno = " . $asist['numero'] .
-                            " AND fecha = '" . $fecha . "'";
+                            " AND fecha = '" . $fecha . "' AND asignacionManual = 0";
                 $con->exec($sql);
 
             }
@@ -757,27 +798,34 @@
         return $recSet->fetch(PDO::FETCH_ASSOC);
     }
 
-    function CovPutAsistencia($fecha, $numeroAlumno, $modoAsistencia){
+    function CovPutAsistencia($fecha, $numeroAlumno, $modoAsistencia, $asignacionManual){
         $con=PdoOpenCon();
-        $sql="INSERT INTO stControlAsistencia (numeroAlumno, fecha, modoAsistencia ) 
-                VALUES (:numero, :fecha, :modo)";
+        $sql="INSERT INTO stControlAsistencia (numeroAlumno, fecha, modoAsistencia, asignacionManual ) 
+                VALUES (:numero, :fecha, :modo, :asignacionManual)";
         $recSet=$con->prepare($sql);
         $result=$recSet->execute(array(":numero"=>$numeroAlumno, 
                                         ":fecha"=>$fecha, 
-                                        ":modo"=>$modoAsistencia));
+                                        ":modo"=>$modoAsistencia,
+                                        ":asignacionManual" => $asignacionManual
+                                       )
+                                );
         return $result; 
     }
 
     // Modifica el modo asistencia de un alumno en una fecha
-    function CovUpdateAsistencia($fecha, $numeroAlumno, $modoAsistencia){
+    function CovUpdateAsistencia($fecha, $numeroAlumno, $modoAsistencia, $asignacionManual){
         $con=PdoOpenCon();
         $sql="UPDATE stControlAsistencia 
-                SET modoAsistencia = :modoAsistencia
+                SET modoAsistencia = :modoAsistencia, asignacionManual = :asignacionManual, fechaHoraComunicacion = Null,
+                    fechaHoraRecibido = Null
                 WHERE fecha = :fecha AND numeroAlumno = :numeroAlumno ";
         $recSet=$con->prepare($sql);
         $result=$recSet->execute(array(":fecha"=>$fecha, 
                                         ":numeroAlumno"=>$numeroAlumno, 
-                                        ":modoAsistencia"=>$modoAsistencia));
+                                        ":modoAsistencia"=>$modoAsistencia,
+                                        ":asignacionManual" => $asignacionManual
+                                    )
+                                );
         return $result; 
     }
 
@@ -895,26 +943,28 @@
 
     }
 
-    function CovGrabacionAlumno($numero, $nombre, $apellidos, $centro, $idAula, $curso, $horario, $dias, $email, $email2, $url){
+    function CovGrabacionAlumno($numero, $nombre, $apellidos, $centro, $idAula, $curso, $horario, $dias, $email, $email2, 
+                                $url, $idProfesor){
         $con=PdoOpenCon();
-        $sql="INSERT INTO stFM2021 (numero, nombre, apellidos, centro, idAula, curso, horario, dias, email, email2, url ) 
-                VALUES (:numero, :nombre, :apellidos, :centro, :idAula, :curso, :horario, :dias, :email, :email2, :url )";
+        $sql="INSERT INTO stFM2021 (numero, nombre, apellidos, centro, idAula, curso, horario, dias, email, email2, url, idProfesor ) 
+                VALUES (:numero, :nombre, :apellidos, :centro, :idAula, :curso, :horario, :dias, :email, :email2, :url, :idProfesor )";
         $op=$con->prepare($sql);
         $result=$op->execute(array(":numero"=>$numero, ":nombre"=>$nombre, ":apellidos"=>$apellidos, ":centro"=> $centro, 
                                     ":idAula"=> $idAula, ":curso"=>$curso, ":horario"=>$horario, ":dias"=>$dias, 
-                                    ":email"=>$email, ":email2"=>$email2, ":url"=>$url));
+                                    ":email"=>$email, ":email2"=>$email2, ":url"=>$url, ":idProfesor" => $idProfesor));
         return $result; 
     }
 
-    function CovModificacionAlumno($numero, $nombre, $apellidos, $centro, $idAula, $curso, $horario, $dias, $email, $email2, $url){
+    function CovModificacionAlumno($numero, $nombre, $apellidos, $centro, $idAula, $curso, $horario, $dias, $email, $email2,
+                                     $url, $idProfesor){
         $con=PdoOpenCon();
         $sql="UPDATE stFM2021 SET nombre = :nombre, apellidos = :apellidos, centro = :centro, 
                         idAula = :idAula, curso = :curso, horario = :horario, dias = :dias, email = :email, 
-                        email2 = :email2, url = :url WHERE numero = :numero";
+                        email2 = :email2, url = :url, idProfesor = :idProfesor WHERE numero = :numero";
         $op=$con->prepare($sql);
         $result=$op->execute(array(":numero"=>$numero, ":nombre"=>$nombre, ":apellidos"=>$apellidos, ":centro"=> $centro, 
                                     ":idAula"=> $idAula, ":curso"=>$curso, ":horario"=>$horario, ":dias"=>$dias, 
-                                    ":email"=>$email, ":email2"=>$email2, ":url"=>$url));
+                                    ":email"=>$email, ":email2"=>$email2, ":url"=>$url, ":idProfesor" => $idProfesor));
         return $result; 
     }
 

@@ -10,7 +10,9 @@ function ConmutaAsistencia(fecha, numeroAlumno, id) {
         url: "SetAsistencia.php",
         data: param,
         success: function(r) {
-            $('#' + id).replaceWith(r);
+            if (r) {
+                $('#' + id).replaceWith(r);
+            }
         },
 
         error: function(error) {
@@ -56,6 +58,27 @@ function GetListaAulas() {
         success: function(r) {
             $('#cbxNotifAulas').html(r);
             GetListaCursos();
+        },
+
+        error: function(error) {
+            console.log(error);
+        }
+    });
+}
+
+function GetListaFechas() {
+
+    const params = {
+        idDias: $('#cbxNotifDiasSemana').val(),
+        idPromocion: 1
+    }
+
+    $.ajax({
+        type: "post",
+        url: "GetHtmlSelectFechas.php",
+        data: params,
+        success: function(r) {
+            $('#cbxNotifFechas').html(r);
         },
 
         error: function(error) {
@@ -151,29 +174,32 @@ function ListaAsistencia() {
         horario: $('#cbxNotifHorarios').val()
     }
 
-    // Visualizacion total de alumnos del centro seleccionado
+    // Visualizacion total de alumnos del centro seleccionado. Solo lo muestra si sólo existe el filtro del centro
+    if (param.fecha == 0 && param.idAula == 0 && param.curso == 0 && param.horario == 0) {
+        $.ajax({
+            type: "get",
+            url: "GetTotalAlumnos.php",
+            data: { centro: param.idCentro },
+            success: function(r) {
+                $('#cantidadAlumnos').html(r);
+            },
 
-    console.log(param.idCentro);
+            error: function(error) {
+                console.log(error);
+            }
 
-    $.ajax({
-        type: "get",
-        url: "GetTotalAlumnos.php",
-        data: { centro: param.idCentro },
-        success: function(r) {
-            $('#cantidadAlumnos').html(r);
-        },
+        })
 
-        error: function(error) {
-            console.log(error);
-        }
-
-    })
+    } else {
+        let cant = document.getElementById("cantidadAlumnos");
+        cant.innerHTML = "";
+    }
 
     Disponibilidadcontroles(param.fecha);
 
 
     // Lista solo si hay una fecha seleccionada
-    if (param.fecha != 0) {
+    if (param.fecha != 0 && param.fecha != '') {
 
         document.body.style.cursor = 'wait';
 

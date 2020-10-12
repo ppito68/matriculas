@@ -6,7 +6,17 @@
     <div class="row mt-1">
         <table class="table-sm table-borderless">
             <thead class="thead-light">
+
                 <tr>
+                
+                </tr>
+
+                <tr>
+                    <!-- <th>
+                        <div>
+                            <img src="./img/city.png" width="75px" height="54px"> 
+                        </div>
+                    </th> -->
                     <th scope="col">
                         <div class="col-auto input-group">
                             <div class="input-group-prepend">
@@ -16,14 +26,37 @@
                                 <?php echo GetHtmlFillSelectCentros(0); ?>
                             </select>
                         </div>
+                        
                     </th>
+
+                    <!-- <th scope="col">
+                        <div class="col-auto input-group">
+                            <div class="input-group-prepend">
+                                <label class="input-group-text" for="cbxNotifCentros">Días/Semana:</label>
+                            </div>
+                            <select class="custom-select" id="cbxNotifCentros" name="cbxNotifCentros" >
+                                <?php //echo GetHtmlFillDiasSemana(0); ?>
+                            </select>
+                        </div>
+                    </th> -->
+
+
+
                     <th scope="col">
                         <div class="col-auto input-group">
+                            <div class="input-group-prepend">
+                                <label class="input-group-text" for="cbxNotifDiasSemana">Días/Semana:</label>
+                            </div>
+                            <select class="custom-select" id="cbxNotifDiasSemana" name="cbxNotifDiasSemana" >
+                                <?php echo GetHtmlFillDiasSemana(0); ?>
+                            </select>
+                        </div>
+                        <div class="col-auto input-group mt-1">
                             <div class="input-group-prepend">
                                 <label class="input-group-text" for="cbxNotifFechas">Fecha:</label>
                             </div>
                             <select class="custom-select" id="cbxNotifFechas" name="cbxNotifFechas">
-                                <?php echo GetHtmlFillSelectFechas(1); ?> <!--el 1 es la promocion, y lo dejo de momento asi para salir del paso -->
+                                 <?php echo GetHtmlFillSelectFechas(1, [0]); ?> <!-- el 1 es la promocion, y lo dejo de momento asi para salir del paso -->
                             </select>
                         </div>                    
                     </th>
