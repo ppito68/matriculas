@@ -79,7 +79,23 @@ $html = '<script>
                   <option value="T-TH"' . (($alum[dias]=='T-TH') ? 'selected' : '') . '>Martes y Jueves</option>
                 </select>
               </div>
+
+              <div class="form-check form-check-inline align-content-lg-center ml-5">
+                <input class="form-check-input" 
+                      type="checkbox" 
+                      name="seEnviaCorreo" 
+                      id="seEnviaCorreo" 
+                      value="1" ' . (($alum[comunicarAsistencia]) ? 'checked' : '') . '>
+                <label class="form-check-label" 
+                      for="seEnviaCorreo">
+                    Se le envía correo electrónico para notificarle su modo de asistencia
+                </label>
+              </div>
+
             </div>
+
+           
+
             <div class="form-row">
               <div class="form-group col-md-12">
                 <label for="url">url enlace zoom</label>

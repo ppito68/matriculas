@@ -64,6 +64,10 @@ $html = $html .
 
 while($alum=$alumnos->fetch(PDO::FETCH_ASSOC)){
 
+    $imgNoEmail = (!$alum["comunicarAsistencia"])
+                    ? '<img class="ml-1" src="./img/noemail.png" width="20px" height="20px">'
+                    : '';
+
     $html = $html .        
         '<th scope="row">' . $alum["numero"] . '</th>
         <td>
@@ -77,10 +81,10 @@ while($alum=$alumnos->fetch(PDO::FETCH_ASSOC)){
                 $alum["nombre"] . 
             '</span>
             <span class="small"> - ' .
-                $alum["curso"] . ' - ' . $alum["Aula"] . ' - ' . $alum["dias"] . ' - ' .
-                $alum["horario"] . ' - ' . $alum["profesor"] . 
-            '</span>
-        </td>';
+                $alum["curso"] . '-' . $alum["Aula"] . '-' . $alum["dias"] . '-' . $alum["horario"] . '-' . $alum["profesor"] . 
+                ' - (' . $alum["totalRemotos"] . ' OL - ' . $alum["totalPresenciales"] . ' Pr - ' . $alum["totalAusencias"] . ' Aus) 
+            </span>' . $imgNoEmail . 
+        '</td>';
         // <td>' . $alum["dias"] . '</td>
         // <td>' . $alum["curso"] . '</td>
         // <td>' . $alum["horario"] . '</td>';

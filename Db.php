@@ -578,11 +578,46 @@
 
         // Consulta principal
         $sql = "SELECT au.Aula, fm.numero, CONCAT(fm.apellidos, ', ' , fm.nombre) as nombre, fm.curso, fm.horario, fm.dias, 
-                    p.nombre as profesor, 
-                    (select count(numeroAlumno) from stControlAsistencia  
-     	                where fecha <= :fecha and  modoAsistencia = 'a' and numeroAlumno = fm.numero) as asiste, 
-	                (select count(numeroAlumno) from stControlAsistencia  
-     	                where fecha <= :fecha and  modoAsistencia = 'o' and numeroAlumno = fm.numero) as remoto " . // No se pone coma despues de este campo, ya la pone la subcadena
+                    p.nombre as profesor, fm.comunicarAsistencia,
+                    (  
+                        (select count(numeroAlumno) 
+                            from stControlAsistencia  
+                            where fecha <= :fecha 
+                                and modoAsistencia = 'a' 
+                                and modoAsistenciaReal is null 
+                                and numeroAlumno = fm.numero)     + 
+                                                                        (select count(numeroAlumno) 
+                                                                            from stControlAsistencia  
+                                                                            where fecha <= :fecha 
+                                                                                and modoAsistenciaReal = 'a' 
+                                                                                and numeroAlumno = fm.numero)    
+                    ) as totalPresenciales, 
+	                (
+                        (select count(numeroAlumno) 
+                            from stControlAsistencia  
+     	                    where fecha <= :fecha 
+                                and modoAsistencia = 'o' 
+                                and modoAsistenciaReal is null
+                                and numeroAlumno = fm.numero)     + 
+                                                                        (select count(numeroAlumno) 
+                                                                            from stControlAsistencia  
+                                                                            where fecha <= :fecha 
+                                                                                and  modoAsistenciaReal = 'o' 
+                                                                                and numeroAlumno = fm.numero)
+                    ) as totalRemotos,
+                    (
+                        (select count(numeroAlumno) 
+                            from stControlAsistencia  
+     	                    where fecha <= :fecha 
+                                and modoAsistencia = 'n' 
+                                and modoAsistenciaReal is null
+                                and numeroAlumno = fm.numero)     + 
+                                                                        (select count(numeroAlumno) 
+                                                                            from stControlAsistencia  
+                                                                            where fecha <= :fecha 
+                                                                                and  modoAsistenciaReal = 'n' 
+                                                                                and numeroAlumno = fm.numero)
+                    ) as totalAusencias" . // No se pone coma despues de este campo, ya la pone la subcadena
                 $subCadenaDias . 
                 " FROM stFM2021 fm 
                     INNER JOIN ssAulas au ON au.id = fm.idAula
@@ -689,16 +724,35 @@
         $con=PdoOpenCon();
         $sql="SELECT fm.numero, fm.nombre, fm.apellidos, fm.url, fm.email, fm.comunicarAsistencia,
                     (select count(numeroAlumno) from stControlAsistencia 
-                        where fecha < :fecha and  modoAsistencia = 'a' and numeroAlumno = fm.numero) as asiste, 
+                        where fecha < :fecha 
+                            and numeroAlumno = fm.numero
+                            and modoAsistencia = 'a'
+                            and modoAsistenciaReal is null )  + 
+                                                                (select count(numeroAlumno) from stControlAsistencia 
+                                                                    where fecha < :fecha 
+                                                                        and numeroAlumno = fm.numero
+                                                                        and modoAsistenciaReal = 'a')
+                        as asiste, 
+
                     (select count(numeroAlumno) from stControlAsistencia 
-                        where fecha < :fecha and  modoAsistencia = 'o' and numeroAlumno = fm.numero) as remoto, 
+                        where fecha < :fecha 
+                            and numeroAlumno = fm.numero
+                            and modoAsistencia = 'o'
+                            and modoAsistenciaReal is null )  + 
+                                                                (select count(numeroAlumno) from stControlAsistencia 
+                                                                    where fecha < :fecha 
+                                                                        and numeroAlumno = fm.numero
+                                                                        and modoAsistenciaReal = 'o')
+                        as remoto, 
+
                     ( select  modoAsistencia from stControlAsistencia where numeroAlumno = fm.numero and fecha = :fecha) as asignado,
+
                     (select id from stControlAsistencia where numeroAlumno = fm.numero and fecha = :fecha) as idControlAsistencia
-            FROM stFM2021 fm 
-                INNER JOIN ssAulas au ON au.id = fm.idAula 
-            WHERE 1 = 1 AND idCentro = :centro AND idAula = :idAula AND fm.curso = :curso and fm.horario = :horario " . $filtroDias . 
-            " GROUP BY au.Aula, fm.numero, fm.nombre, fm.apellidos, fm.curso, fm.horario, fm.dias 
-            ORDER BY remoto, fm.numero desc";
+                FROM stFM2021 fm 
+                    INNER JOIN ssAulas au ON au.id = fm.idAula 
+                WHERE 1 = 1 AND idCentro = :centro AND idAula = :idAula AND fm.curso = :curso and fm.horario = :horario " . $filtroDias . 
+                " GROUP BY au.Aula, fm.numero, fm.nombre, fm.apellidos, fm.curso, fm.horario, fm.dias 
+                ORDER BY remoto, fm.numero desc";
         
         // --- LINEA DE DEPURACION->echo "Consulta de los alumnos del grupo:" . $sql . "\n";            
         
@@ -716,8 +770,8 @@
                 from stControlAsistencia where numeroAlumno = :numero and fecha = :fecha";
         $recSet=$con->prepare($sql);
         $recSet->execute(array(':fecha'=>$fecha, ':numero'=>$numeroAlumno));
-        if($alum=$recSet->fetch(PDO::FETCH_ASSOC)){
-            return $alum['r'];
+        if($reg=$recSet->fetch(PDO::FETCH_ASSOC)){
+            return $reg['r'];
         }else{
             return false;
         }
@@ -944,27 +998,34 @@
     }
 
     function CovGrabacionAlumno($numero, $nombre, $apellidos, $centro, $idAula, $curso, $horario, $dias, $email, $email2, 
-                                $url, $idProfesor){
+                                $url, $idProfesor, $seEnviaCorreo){
         $con=PdoOpenCon();
-        $sql="INSERT INTO stFM2021 (numero, nombre, apellidos, centro, idAula, curso, horario, dias, email, email2, url, idProfesor ) 
-                VALUES (:numero, :nombre, :apellidos, :centro, :idAula, :curso, :horario, :dias, :email, :email2, :url, :idProfesor )";
+        $sql="INSERT INTO stFM2021 (numero, nombre, apellidos, centro, idAula, curso, 
+                        horario, dias, email, email2, url, idProfesor, comunicarAsistencia ) 
+                VALUES (:numero, :nombre, :apellidos, :centro, :idAula, :curso, 
+                        :horario, :dias, :email, :email2, :url, :idProfesor, :comunicar )";
         $op=$con->prepare($sql);
         $result=$op->execute(array(":numero"=>$numero, ":nombre"=>$nombre, ":apellidos"=>$apellidos, ":centro"=> $centro, 
                                     ":idAula"=> $idAula, ":curso"=>$curso, ":horario"=>$horario, ":dias"=>$dias, 
-                                    ":email"=>$email, ":email2"=>$email2, ":url"=>$url, ":idProfesor" => $idProfesor));
+                                    ":email"=>$email, ":email2"=>$email2, ":url"=>$url, ":idProfesor" => $idProfesor,
+                                    ":comunicar" => $seEnviaCorreo)
+                            );
         return $result; 
     }
 
     function CovModificacionAlumno($numero, $nombre, $apellidos, $centro, $idAula, $curso, $horario, $dias, $email, $email2,
-                                     $url, $idProfesor){
+                                     $url, $idProfesor, $seEnviaCorreo){
         $con=PdoOpenCon();
         $sql="UPDATE stFM2021 SET nombre = :nombre, apellidos = :apellidos, centro = :centro, 
                         idAula = :idAula, curso = :curso, horario = :horario, dias = :dias, email = :email, 
-                        email2 = :email2, url = :url, idProfesor = :idProfesor WHERE numero = :numero";
+                        email2 = :email2, url = :url, idProfesor = :idProfesor, comunicarAsistencia = :comunicar
+                WHERE numero = :numero";
         $op=$con->prepare($sql);
         $result=$op->execute(array(":numero"=>$numero, ":nombre"=>$nombre, ":apellidos"=>$apellidos, ":centro"=> $centro, 
                                     ":idAula"=> $idAula, ":curso"=>$curso, ":horario"=>$horario, ":dias"=>$dias, 
-                                    ":email"=>$email, ":email2"=>$email2, ":url"=>$url, ":idProfesor" => $idProfesor));
+                                    ":email"=>$email, ":email2"=>$email2, ":url"=>$url, ":idProfesor" => $idProfesor,
+                                    ":comunicar" => $seEnviaCorreo)
+                            );
         return $result; 
     }
 
@@ -1012,6 +1073,39 @@
         return $recSet->fetch(PDO::FETCH_ASSOC);
     }
 
+
+    function SeAusentoDiaAnteriorSinAvisar($numeroAlumno, $fecha){
+        $con=PdoOpenCon();
+        $sql="SELECT * FROM stControlAsistencia c
+                WHERE c.numeroAlumno = :numero AND fecha < :fecha
+                ORDER BY c.fecha desc
+                LIMIT 1";
+        $recSet=$con->prepare($sql);
+        $recSet->execute(array(':fecha'=>$fecha, ':numero'=>$numeroAlumno));
+        if($reg=$recSet->fetch(PDO::FETCH_ASSOC)){
+            return ( $reg['modoAsistencia'] === 'a' && $reg['modoAsistenciaReal'] === 'n' );
+        }else{
+            return false;
+        }
+
+    }
+
+
+    function VinoAClaseCuandoEraOnline($numeroAlumno, $fecha){
+        $con=PdoOpenCon();
+        $sql="SELECT * FROM stControlAsistencia c
+                WHERE c.numeroAlumno = :numero AND fecha < :fecha
+                ORDER BY c.fecha desc
+                LIMIT 1";
+        $recSet=$con->prepare($sql);
+        $recSet->execute(array(':fecha'=>$fecha, ':numero'=>$numeroAlumno));
+        if($reg=$recSet->fetch(PDO::FETCH_ASSOC)){
+            return ( $reg['modoAsistencia'] === 'o' && $reg['modoAsistenciaReal'] === 'a' );
+        }else{
+            return false;
+        }
+
+    }
     
 
  

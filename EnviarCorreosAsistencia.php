@@ -59,11 +59,11 @@ while($grupo=$grupos->fetch(PDO::FETCH_ASSOC)){
                 }elseif($alumno['asignado']=='o'){
     
                     $texto =  "Hola, te escribimos desde City School:" . "\n" . "\n" .
-                    $alumno['nombre'] . " " . $alumno['apellidos'] .  ", te comunicamos que, según nuestro control interno de asistencia, el próximo día " . $diaSemana . ", " . $fechaConFormato . " la clase para ti será ON LINE, cuyo enlace de conexión es el siguiente." . "\n" . "\n" .
-                    $alumno['url']  . "\n" . "\n" .
-                    "Por favor, pulsa en el siguiente enlace para confirmar que ha recibido nuestro mensaje: https://www.cityschool.es/stf/cnf/wr.php?na=" . $alumno['numero'] . "&id=" . $alumno['idControlAsistencia'] . "\n" . "\n" .
-                    "Muchas gracias por tu colaboración." . "\n" . "\n";
-    
+                            $alumno['nombre'] . " " . $alumno['apellidos'] .  ", te comunicamos que, según nuestro control interno de asistencia, el próximo día " . $diaSemana . ", " . $fechaConFormato . " la clase para ti será ON LINE, cuyo enlace de conexión es el siguiente." . "\n" . "\n" .
+                            $alumno['url']  . "\n" . "\n" .
+                            "Por favor, pulsa en el siguiente enlace para confirmar que ha recibido nuestro mensaje: https://www.cityschool.es/stf/cnf/wr.php?na=" . $alumno['numero'] . "&id=" . $alumno['idControlAsistencia'] . "\n" . "\n" .
+                            "Muchas gracias por tu colaboración." . "\n" . "\n";
+
                     $destinatario = $alumno['email']; 
                     // $destinatario = 'jaguilar68@gmail.com'; //'miguelezluis@gmail.com'; //   
     

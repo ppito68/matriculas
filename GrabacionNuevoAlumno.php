@@ -12,6 +12,9 @@ $dias = $_POST["dias"];
 $email = $_POST["email"];
 $email2 = $_POST["email2"];
 $url = $_POST["url"];
+$seEnviaCorreo = $_POST["seEnviaCorreo"];
+
+$seEnviaCorreo = $seEnviaCorreo ? 1 : 0;
 
 require_once("Db.php");
 
@@ -22,7 +25,7 @@ if($alum=$res->fetch(PDO::FETCH_ASSOC)){
 
     try {
         $r = CovModificacionAlumno($numero, $nombre, $apellidos, $centro, $idAula, $curso, $horario, $dias, $email, $email2, 
-                                    $url, $idProfesor);
+                                    $url, $idProfesor, $seEnviaCorreo);
         echo "El alumno se ha modificado correctamente";
     } catch (\Throwable $th) {
         echo 'ha ocurrido un error al modificar el alumno.';
@@ -34,10 +37,10 @@ if($alum=$res->fetch(PDO::FETCH_ASSOC)){
 
     try {
         $r = CovGrabacionAlumno($numero, $nombre, $apellidos, $centro, $idAula, $curso, $horario, $dias, $email, $email2, 
-                                $url, $idProfesor);
+                                $url, $idProfesor, $seEnviaCorreo);
         echo "El alumno se ha grabado correctamente";
     } catch (\Throwable $th) {
-        echo 'ha ocurrido un error al crear el alumno';
+        echo 'ha ocurrido un error al crear el alumno: Error -> ' . $th->getMessage();
     }
 
 

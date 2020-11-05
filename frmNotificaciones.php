@@ -98,8 +98,8 @@
                     <td colspan="2">
 
                         <button onclick="GenerarAsistencias()" type="button" class="btn btn-primary" id="btnGenerar" disabled>Generar</button>            
+                        <button onclick="EliminarAsistencias()" type="button" class="btn btn-danger">Eliminar generados</button>
                         <button onclick="EnviarEmails()" type="button" class="btn btn-success" id="btnEnviarEmail" disabled>Enviar Email</button>
-                        <button onclick="EliminarAsistencias()" type="button" class="btn btn-danger">Eliminar</button>
                         <button onclick="MttoAlumno(0)" type="button" class="btn btn-info">Añadir Alumno</button>
                         <div id="cantidadAlumnos" class="badge badge-primary text-wrap" style="width: 6rem;"></div>
 
