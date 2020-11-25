@@ -9,6 +9,11 @@
     <!-- Bootstrap CSS -->
     <link rel="stylesheet" href="./css/bootstrap.min.css">
 
+    <link rel="stylesheet" href="../fontawesome/css/all.css">
+
+    <!-- animate.css -->
+    <link rel="stylesheet" href="./css/animate.css">
+
     <script
         src="https://code.jquery.com/jquery-3.3.1.js" 
         integrity="sha256-2Kok7MbOyxpgUVvAk/HJ2jigOSYS2auK4Pfzbm7uH60=" 
@@ -44,9 +49,10 @@
     <div id="mttoAlumno" class="container-fluid" style="display: none;">
     </div>
     
-    <!-- <div id="notificaciones" class="container-fluid" style="display: block;"> -->
-    <header id="notificaciones" >
-        <?php include("frmNotificaciones.php"); ?>
+    <header>
+        <div id="notificaciones" class="animate__fadeIn container-fluid" style="display: block;">
+            <?php include("frmNotificaciones.php"); ?>
+        </div>
     </header>
 
 </body>

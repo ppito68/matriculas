@@ -480,8 +480,8 @@
         }
 
         $sql="SELECT fecha, concat( 
-                ELT(WEEKDAY(fecha) + 1, 'Lunes', 'Martes', 'Miercoles', 'Jueves', 'Viernes', 'Sabado', 'Domingo'), 
-                ' - ', day(fecha), '/', month(fecha), '/', year(fecha)
+                ELT(WEEKDAY(fecha) + 1, 'Lun', 'Mar', 'Mie', 'Jue', 'Vie', 'Sab', 'Dom'), 
+                ' - ', lpad(day(fecha),2,0), '/', lpad(month(fecha),2,0), '/', lpad(year(fecha),2,0)
                                     ) as diaSemanaYFecha
                 FROM stCalendario WHERE idPromocion = :idPromocion" . $filtroDias;
         $recSet=$con->prepare($sql);
@@ -761,21 +761,31 @@
         return $recSet;
     }
 
-    function covEsOnline($numeroAlumno, $fecha){
-        $con=PdoOpenCon();
-        $sql="select fecha, if(modoAsistenciaReal is null, 
-                                        if(modoAsistencia = 'o', 1, 0), 
-                                        if(modoAsistenciaReal = 'o', 1, 0)
-                              ) as r
-                from stControlAsistencia where numeroAlumno = :numero and fecha = :fecha";
-        $recSet=$con->prepare($sql);
-        $recSet->execute(array(':fecha'=>$fecha, ':numero'=>$numeroAlumno));
-        if($reg=$recSet->fetch(PDO::FETCH_ASSOC)){
-            return $reg['r'];
-        }else{
-            return false;
-        }
-    }
+    // Devuelve 2 si el dia de la fecha hizo ONLINE (o tenia previsto ONLINE si no tenia confirmada la asistencia)
+    //  Devuelve 1 si el dia de la fecha tenia previsto ONLINE pero no Asistió 
+    // Devuelve 0 para los demas casos
+    // function getPuntosPorOnLine($numeroAlumno, $fecha){
+    //     $con=PdoOpenCon();
+    //     $sql="select fecha, if(modoAsistenciaReal is null, 
+    //                                     if(modoAsistencia = 'o', 
+    //                                             2,
+    //                                             0), 
+    //                                     if(modoAsistenciaReal = 'o', 
+    //                                             2, 
+    //                                             if(modoAsistenciaReal = 'n' and modoAsistencia = 'o',
+    //                                                         1, 
+    //                                                         0)
+    //                                     )
+    //                         ) as puntos
+    //             from stControlAsistencia where numeroAlumno = :numero and fecha = :fecha";
+    //     $recSet=$con->prepare($sql);
+    //     $recSet->execute(array(':fecha'=>$fecha, ':numero'=>$numeroAlumno));
+    //     if($reg=$recSet->fetch(PDO::FETCH_ASSOC)){
+    //         return $reg['puntos'];
+    //     }else{
+    //         return 0;
+    //     }
+    // }
 
 
 

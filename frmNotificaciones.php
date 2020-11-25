@@ -102,6 +102,7 @@
                         <button onclick="EnviarEmails()" type="button" class="btn btn-success" id="btnEnviarEmail" disabled>Enviar Email</button>
                         <button onclick="MttoAlumno(0)" type="button" class="btn btn-info">Añadir Alumno</button>
                         <div id="cantidadAlumnos" class="badge badge-primary text-wrap" style="width: 6rem;"></div>
+                        <!-- <i class="fas fa-sync-alt fa-spin fa-5x mr-1"></i> -->
 
                     </td>
                     <td>

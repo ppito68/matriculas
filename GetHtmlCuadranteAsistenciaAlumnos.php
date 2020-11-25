@@ -24,8 +24,8 @@ $html = "<script>
             }
         </script>";
 
-$html .= //'<div class="container-fluid">
-         '   <table class="table table-striped table-sm">
+$html .=                                //'<div class="container-fluid">
+            '<table class="table table-striped table-sm">
                 <thead class="thead-light">
                     <tr>
                         <th scope="col-auto">nºAl.</th>
@@ -131,7 +131,7 @@ while($alum=$alumnos->fetch(PDO::FETCH_ASSOC)){
             
 }
 
-echo $html . '</tbody></table>'; //</div>';;
+echo $html . '</tbody></table>'; //</div>';
 
 $alumnos->closeCursor();
 
