@@ -480,9 +480,9 @@
         }
 
         $sql="SELECT fecha, concat( 
-                ELT(WEEKDAY(fecha) + 1, 'Lun', 'Mar', 'Mie', 'Jue', 'Vie', 'Sab', 'Dom'), 
-                ' - ', lpad(day(fecha),2,0), '/', lpad(month(fecha),2,0), '/', lpad(year(fecha),2,0)
-                                    ) as diaSemanaYFecha
+                                    ELT(WEEKDAY(fecha) + 1, 'Lun', 'Mar', 'Mie', 'Jue', 'Vie', 'Sab', 'Dom'), 
+                                    ' - ', lpad(day(fecha),2,0), '/', lpad(month(fecha),2,0), '/', year(fecha)
+                                  ) as diaSemanaYFecha
                 FROM stCalendario WHERE idPromocion = :idPromocion" . $filtroDias;
         $recSet=$con->prepare($sql);
         $recSet->execute(array(':idPromocion'=>$idPromocion));

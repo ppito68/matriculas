@@ -14,6 +14,7 @@ $html = '<script>
               CargaComboAulasMttoAlumnos(idCentro, ' . $alum['idAula'] . ');
             });
         </script>
+        
         <form action="GrabacionNuevoAlumno.php" method="post">
           <div class="container-fluid mt-3">
             <input type="hidden" name="idAula" id="idAula" value="' . $alum['idAula'] . '">
@@ -94,16 +95,16 @@ $html = '<script>
 
             </div>
 
-           
-
             <div class="form-row">
               <div class="form-group col-md-12">
                 <label for="url">url enlace zoom</label>
                 <input type="text" class="form-control" id="url" name="url" value="' . $alum[url] . '">
               </div>
             </div>
+
             <button type="submit" class="btn btn-primary">Guardar</button>
             <button type="button" class="btn btn-secondary" onclick="PanelAsistencias()">VOLVER AL PANEL</button>
+
           </div>
         </form>';
 

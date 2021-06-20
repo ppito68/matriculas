@@ -1,0 +1,15 @@
+
+// esta consulta la tengo preparada por si alguna vez hay que comprobar si el grupo en cuestion TUVO alguna vez online
+// Es util para grupor que NO tienen online debido al aforo pero que alguna vez los tuvo por reducciones de aforo
+select count(*) from viewGrupos g 
+	inner join stFM2021 fm on fm.centro = g.centro 
+    						and fm.curso = g.curso 
+                            and fm.horario = g.horario
+                            and fm.dias = g.dias
+                            and fm.idAula = g.idAula
+    inner join stControlAsistencia c on c.numeroAlumno = fm.numero
+where c.modoAsistencia = 'o' AND fm.centro = 1 
+    						and fm.curso = 'lll' 
+                            and fm.horario = '999'
+                            and fm.dias = 'lll'
+                            and fm.idAula = 1

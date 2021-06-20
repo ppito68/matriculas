@@ -2,9 +2,12 @@
 
 Function EnviarEmail($Destinatario, $Asunto, $Mensaje){
 
-    $header='From: CITY SCHOOL <admin@cityschool.es>' . "\r\n" .
-    'Bcc: admin@cityschool.es' . "\r\n"; // esto sería copia oculta
-    // 'Reply-To: info@lucrecianovias.com' . "\r\n";
+    $header =  "MIME-Version: 1.0\r\n" .
+               "Content-type: text/html; charset=iso-8859-1\r\n" .
+               "From: CITY SCHOOL <admin@cityschool.es>\r\n" .
+               "Bcc: admin@cityschool.es\r\n" . // esto sería copia oculta
+               "Reply-To: admin@cityschool.es\r\n" .
+               "Return-path: admin@cityschool.es\r\n"; 
 
     try{
         // if(mail($Destinatario, $Asunto, $Mensaje, 'admin@cityschool.es')){

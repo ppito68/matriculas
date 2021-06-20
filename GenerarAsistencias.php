@@ -8,6 +8,11 @@ $idAula = $_POST["idAula"];
 $curso = $_POST["curso"];
 $horario = $_POST["horario"];
 
+// Esta variable se creo para que recibiera la hora de toque de queda en época de covid. Si un grupo tenia un horario que abarcara la hora de esta variable, el objetivo era
+//  asignarle a todos los alumnos de ese grupo la asistencia en modo ONLINE. No se llegó a usar, por lo que le asigno a esta varible un null para que no proceda en el proceso 
+//  de asignacion de asistencia.
+$horaToqueQueda = NULL; //$_POST["horaToqueQueda"];
+
 // funcion para ordenar array de alumnos por los puntos asignados en el sistema de asignacion de asist a alumnos con iguales
 //  tipos de asistencias.
 function cmp($a, $b){
@@ -17,6 +22,12 @@ function cmp($a, $b){
     // return ($a['puntos'] < $b['puntos']) ? -1 : 1;
 
     return $a['puntos'] - $b['puntos'];
+}
+
+// Devuelve true ó false si el Grupo tiene un horario donde termina despues de la hora recibida como parametro
+function GrupoEnHorarioComprometido($grupo, $hora){
+    list($horaBegin, $horaEnd) = explode("-", $grupo['horario']);
+    return ((float) $horaEnd) > ((float) $hora); // devuelve true si el horario de final de clase es mayor a la hora recibida
 }
 
 // obtiene los dias comprometidos del calendario escolar desde el inicio de curso hasta el dia de la fecha para usarlo en (*1) para
@@ -58,6 +69,7 @@ while($grupo=$grupos->fetch(PDO::FETCH_ASSOC)){
     $alumnos = CovGetAsistenciasGrupo($fecha, $centroGrupo, $idAulaGrupo, $cursoGrupo, $horarioGrupo);
     while($alumno=$alumnos->fetch(PDO::FETCH_ASSOC)){ 
 
+
         /* Cálculo del orden de asignacion del modo de asist ONLINE: 
 
          1º El primer criterio asigna ONLINE preferentemente a los alumnos cuya ultima clase tenia asignado el modo de 
@@ -78,81 +90,27 @@ while($grupo=$grupos->fetch(PDO::FETCH_ASSOC)){
               Este orden es Ascendente, es decir, los alumnos que MENOS asistencias ONLINE hayan hecho serán los primeros en 
               asignarle la asist ONLINE. Si en este orden existen empates, se establece el siguiente orden.
 
-         6º El cuarto orden tiene en cuenta los dias transcurridos desde todas las veces ONLINE que ha hecho el alumno, asignando
-                a cada alumno una puntuación dependiendo de la cantidad de dichos días transcurridos. La suma de esos días son asignados 
-                al alumno, por lo que este orden es Descendente, asignando preferentemente OL a los alumnos que mas días transcurridos
-                tiene acumulado. 
+         6º Este orden se establece si aun aplicando los ordenes anteriores, continua habiendo empates. Por desempatar de alguna
+                manera, este orden establece el numero de alumno, y será Descendente para dar una falsa prioridad de antigüedad.  
+        */  
 
-         7º Este orden se establece si aun aplicando los ordenes anteriores, continua habiendo empates. Por desempatar de alguna
-                manera, este orden establece el numero de alumno, y será Descendente para dar una falsa prioridad de antigüedad.  */  
+        
 
-        // Inicializa la variable que guarda para cada alumno los puntos por día asistido OL de forma continuada en los dias 
-        //  inmediatamente anteriores al día de la asignación                
+        // Inicializa la variable que guarda para cada alumno los puntos por día asistido OL de forma continuada en los dias inmediatamente anteriores al día de la asignación                
         $puntosOnlineContinuos = 0;
 
-        //
+        // Inicializa la variable que guarda para cada alumno los puntos por día asistido PRESENCIAL de forma continuada en los dias inmediatamente anteriores al día de la asignación         
         $puntosPresencialesContinuos = 0;
 
-        // variable que acumula para un alumno la cantidad  de dias transcurridos desde todos los dias que ha asistido ONLINE 
-        //   hasta el dia de la asignacion.
-        $puntos = 0; 
-        
-        // variable que guarda los puntos iniciales a asignar y que va disminuyendo en 1 por cada iteracion de asignacion de puntos
-        $puntosDelDia = count($diasArray); 
-        
-
-        // bucle que recoge informacion para los criterios 3º y 5º de orden.
-        // recorre todas las fecha lectivas anteriores a la fecha de asignacion para acumular tipos de asistencias
+        // recorre todas las fecha lectivas anteriores a la fecha de asignacion para obtener puntos por asistencias continuadas OL y Presenc.
         foreach($diasArray as $dia){ 
-            
-            // Variable para control criterio 3
-            // Suma a esta variable 1 punto si el $dia hizo OL (o tenia previsto OL y no tenia la asist confirmada aun)
-            //  Suma a esta variable 0.5 punto si la asist PREVISTA era OL pero NO asistió a la cita
-            //  Para las demás premisas, no suma nada.
-            $puntosOnline = 0; // = getPuntosPorOnLine($alumno['numero'], $dia['fecha']);
 
-            // Variable para control criterio 4
-            // Suma a esta variable 1 punto si el $dia hizo PRESENCIAL (o tenia previsto PRESENCIAL y no tenia la asist confirmada aun)
-            //  Para las demás premisas, no suma nada.
-            $puntosPresenciales = 0;
+            $asist = CovGetAsistencia( $dia['fecha'], $alumno['numero'] ); // obtiene la asistencia del alumno y día de la fecha en proceso
+            $puntosContinuidad = puntosPorContinuidad($asist); // Obtencion array con puntos para Criterios 3 y 4
 
-            $asist = CovGetAsistencia( $dia['fecha'], $alumno['numero'] );
+            $puntosOnlineContinuos = ($puntosContinuidad["online"] > 0) ? ($puntosOnlineContinuos + $puntosContinuidad["online"]) : 0; 
+            $puntosPresencialesContinuos = ( $puntosContinuidad["presenciales"] > 0 ) ? ( $puntosPresencialesContinuos + $puntosContinuidad["presenciales"] ) : 0; 
 
-            // Criterios 3 y 4
-            if($asist){
-                //Si NO esta establecida la asistecia REAL, obtiene la Prevista 
-                if(!$asist['modoAsistenciaReal']){
-                    if($asist['modoAsistencia'] === 'o'){
-                        $puntosOnline = 1;
-                    }elseif($asist['modoAsistencia'] === 'a'){
-                        $puntosPresenciales = 1;
-                    }
-                // Si esta establecida la asist REAL                    
-                }else{
-                    if($asist['modoAsistenciaReal'] === 'o'){
-                        $puntosOnline = 1;
-                    }elseif($asist['modoAsistenciaReal'] === 'n' && 
-                                    ( $asist['modoAsistencia'] === 'o' || $asist['modoAsistencia'] === 'n' )
-                            ){
-                        $puntosOnline = 0.5;
-                    }elseif($asist['modoAsistenciaReal'] === 'a'){
-                        $puntosPresenciales = 1;
-                    }
-                }
-            }
-
-            // añade 2, 1 o 0 puntos a la variable que acumula los puntos por OL continuados
-            $puntosOnlineContinuos = ($puntosOnline > 0) ? ($puntosOnlineContinuos + $puntosOnline) : 0; 
-
-            //
-            $puntosPresencialesContinuos = ( $puntosPresenciales > 0 ) ? ( $puntosPresencialesContinuos + $puntosPresenciales ) : 0; 
-
-
-            // Suma los puntos para el criterio 5º si el dia hizo OL
-            // Con saber que los puntos obtenidos por OL continuados en la variable "$puntosOnLine" sea > 1, ya se sabe que ha 
-            //  sido OL para obtener estos puntos, asi evito preguntar por los modos de asistencias que son varios.
-            $puntos += ( $puntosOnline > 1 ) ? $puntosDelDia : 0; 
-            $puntosDelDia--; // resta uno a los puntos a asignar para el siguiente 
         }
 
         // 1º criterio
@@ -168,8 +126,7 @@ while($grupo=$grupos->fetch(PDO::FETCH_ASSOC)){
                                     "seAusentoDiaAnteriorSinAvisar" => $seAusentoDiaAnteriorSinAvisar, 
                                     "vinoAClaseCuandoEraOnline" => $vinoAClaseCuandoEraOnline,
                                     "onLineContinuos" => $puntosOnlineContinuos,
-                                    "presencialesContinuos" => $puntosPresencialesContinuos,
-                                    "puntos"=>$puntos
+                                    "presencialesContinuos" => $puntosPresencialesContinuos
                                 );
     }
 
@@ -182,48 +139,61 @@ while($grupo=$grupos->fetch(PDO::FETCH_ASSOC)){
     $colOnLineContinuos = array_column($alumnosArray, 'onLineContinuos');
     $colPresencialesContinuados = array_column($alumnosArray, 'presencialesContinuos');
     $colRemotos = array_column($alumnosArray, 'remoto');
-    $colPuntos = array_column($alumnosArray, 'puntos');
     $colNumeros = array_column($alumnosArray, 'numero');
     array_multisort($colAusentadoDiaAnteriorSinAvisar, SORT_DESC,
                     $colVinoAClaseCuandoEraOnline, SORT_DESC,
                     $colOnLineContinuos, SORT_ASC,
                     $colPresencialesContinuados, SORT_DESC,
                     $colRemotos, SORT_ASC, 
-                    $colPuntos, SORT_DESC, 
                     $colNumeros, SORT_DESC, $alumnosArray);
 
     // Bucle que asigna la asist correspondiente a cada alumno
     foreach($alumnosArray as &$alumno){ // se pone & para poder modificar el elemento $alumno
 
-        // Si no tiene PREAsignado la asist, le asigna "o" ó "a" según sea el modo de asist
-        if($alumno["asignado"]==""){
+        // Si hay horario de toque de queda le asigna ONLINE a todos los alumnos cuyas clases se impartan dentro del horario de toque de queda.
+        // La variable "$horaToqueQueda" está declarada al principio de este modulo con valor NULL, ya que no se llegó a utlizar esta opción, pero se deja por si en un futuro...
+        if(!is_null($horaToqueQueda)){
 
-            // La variable $onLine guarda las veces online que quedan por asignar; cuando es 0 ya ha asignado todos los online,
-            //  los demas le asigna PRESENCIAL
-            if($onLine>0){
+            // si el grupo tiene un horario el cual abarca la hora de estado de queda, le asigna a todo el grupo la asistencia online
+            if(GrupoEnHorarioComprometido($grupo, $horaToqueQueda)){
+
                 $alumno["asignado"]='o';
-                $onLine--; // le quita 1 a las veces que faltan por asignar online
-
-            }else{
-                $alumno["asignado"]='a';
 
             }
-        
-        // Si ya tenia PREAsignada la asitencia, le cambia el valor a "PRE" por ponerle un valor distinto a "a" y "o"
-        //   ya que el proceso de grabacion de la asist, solo graba las asist "a" ú "o" en la llamada a la funcion
-        //  CovGrabaAsistencias(...) que se hace en (*2)
-        }else{
-            $alumno["asignado"]='PRE';
 
+        }else{
+
+            // Si no tiene PREAsignado la asist, le asigna "o" ó "a" según sea el modo de asist
+            if($alumno["asignado"]==""){
+
+                // La variable $onLine guarda las veces online que quedan por asignar; cuando es 0 ya ha asignado todos los online,
+                //  los demas le asigna PRESENCIAL
+                if($onLine>0){
+                    $alumno["asignado"]='o';
+                    $onLine--; // le quita 1 a las veces que faltan por asignar online
+
+                }else{
+                    $alumno["asignado"]='a';
+
+                }
+            
+            // Si ya tenia PREAsignada la asitencia, le cambia el valor a "PRE" por ponerle un valor distinto a "a" y "o"
+            //   ya que el proceso de grabacion de la asist, solo graba las asist "a" ú "o" en la llamada a la funcion
+            //  CovGrabaAsistencias(...) que se hace en (*2)
+            }else{
+                $alumno["asignado"]='PRE';
+
+            }
+               
         }
-            // LINEA DE DEPURACION ->        
-            echo 'nº' . $alumno['numero'] . 
-                ' - Faltó y era Presenc.:' . $alumno['seAusentoDiaAnteriorSinAvisar'] . 
-                ' - Acudió y era OL?:' . $alumno['vinoAClaseCuandoEraOnline'] . 
-                ' - OL continuados:' . $alumno["onLineContinuos"] . 
-                ' - Presenc cont:' . $alumno["presencialesContinuos"] . 
-                ' - veces OL:' . $alumno['remoto'] . 
-                ' - Puntos dias transc.desde OL:' . $alumno['puntos'] . "\n";
+
+         // LINEA DE DEPURACION ->        
+                // echo 'nº' . $alumno['numero'] . 
+                //     ' - Faltó y era Presenc.:' . $alumno['seAusentoDiaAnteriorSinAvisar'] . 
+                //     ' - Acudió y era OL?:' . $alumno['vinoAClaseCuandoEraOnline'] . 
+                //     ' - OL cont.:' . $alumno["onLineContinuos"] . 
+                //     ' - Presenc cont:' . $alumno["presencialesContinuos"] . 
+                //     ' - veces OL:' . $alumno['remoto'] . "\n";
 
     }
     
@@ -232,6 +202,41 @@ while($grupo=$grupos->fetch(PDO::FETCH_ASSOC)){
 }
 
 $grupos->closeCursor();
+
+
+
+
+// Devuelve array con dos variables numericas, una para el valor de OnLine y otra para el valor de asistencia presencial.
+// - La variable para Online devuelve 1 si la asistencia REAL fue Online (o si la asistencia real no está establecida pero estaba prevista Online). Devuelve 0,5 si se ausentó pero la 
+//      asistencia prevista era Online ó estaba previsto que faltara
+// - La variable para Presencial devuelve 1 si la asistencia Real fue Presencial ó si la asistencia real no está establecida pero estaba previsto presencial
+function puntosPorContinuidad($asistencia){
+
+    $puntosOnline = 0;
+    $puntosPresenc = 0;
+
+      //Si NO esta establecida la asistecia REAL, obtiene la Prevista 
+    if(!$asistencia['modoAsistenciaReal']){
+        if($asistencia['modoAsistencia'] === 'o'){
+            $puntosOnline = 1;
+        }elseif($asistencia['modoAsistencia'] === 'a'){
+            $puntosPresenc = 1;
+        }
+    // Si esta establecida la asist REAL                    
+    }else{
+        if($asistencia['modoAsistenciaReal'] === 'o'){
+            $puntosOnline = 1;
+        }elseif($asistencia['modoAsistenciaReal'] === 'n' && 
+                        ( $asistencia['modoAsistencia'] === 'o' || $asistencia['modoAsistencia'] === 'n' )
+                ){
+            $puntosOnline = 0.5;
+        }elseif($asistencia['modoAsistenciaReal'] === 'a'){
+            $puntosPresenc = 1;
+        }
+    }
+
+    return [ "online" => $puntosOnline, "presenciales" => $puntosPresenc];
+}
 
 
 ?>
