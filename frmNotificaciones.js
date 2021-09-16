@@ -1,8 +1,8 @@
-function ConmutaAsistencia(fecha, numeroAlumno, id) {
+function ConmutaAsistencia(fecha, idMatricula, id) {
 
     const param = {
         fecha: fecha,
-        numeroAlumno: numeroAlumno,
+        idMatricula: idMatricula,
     };
 
     $.ajax({
@@ -21,12 +21,12 @@ function ConmutaAsistencia(fecha, numeroAlumno, id) {
     })
 }
 
-function EliminarAlumno(numero) {
-    const confirma = confirm("Estás segur@ de eliminar el alumno " + numero + "?");
+function EliminarMatricula(idMatricula) {
+    const confirma = confirm("ATENCION!!! No uses está opción para dar de baja una matrícula. Estás segur@ de eliminar la matrícula del alumno ?");
     if (confirma) {
 
         const param = {
-            numero: numero
+            idMatricula: idMatricula
         }
 
         $.ajax({
@@ -70,7 +70,7 @@ function GetListaFechas() {
 
     const params = {
         idDias: $('#cbxNotifDiasSemana').val(),
-        idPromocion: 1
+        idPromocion: $('#cbxNotifPromociones').val(),
     }
 
     $.ajax({
@@ -79,6 +79,7 @@ function GetListaFechas() {
         data: params,
         success: function(r) {
             $('#cbxNotifFechas').html(r);
+            ListaAsistencia();
         },
 
         error: function(error) {
@@ -90,6 +91,7 @@ function GetListaFechas() {
 function GetListaCursos() {
 
     const params = {
+        idPromocion: $('#cbxNotifPromociones').val(),
         idCentro: $('#cbxNotifCentros').val(),
         fecha: $('#cbxNotifFechas').val(),
         idAula: $('#cbxNotifAulas').val()
@@ -114,6 +116,7 @@ function GetListaCursos() {
 function GetListaHorarios() {
 
     const params = {
+        idPromocion: $('#cbxNotifPromociones').val(),
         fecha: $('#cbxNotifFechas').val(),
         idCentro: $('#cbxNotifCentros').val(),
         idAula: $('#cbxNotifAulas').val(),
@@ -138,6 +141,7 @@ function GetListaHorarios() {
 
 function GetAforo() {
     const params = {
+        idPromocion: $('#cbxNotifPromociones').val(),
         idCentro: $('#cbxNotifCentros').val(),
         fecha: $('#cbxNotifFechas').val(),
         idAula: $('#cbxNotifAulas').val(),
@@ -167,6 +171,7 @@ function Disponibilidadcontroles(fecha) {
 function ListaAsistencia() {
 
     const param = {
+        idPromocion: $('#cbxNotifPromociones').val(),
         idCentro: $('#cbxNotifCentros').val(),
         fecha: $('#cbxNotifFechas').val(),
         idAula: $('#cbxNotifAulas').val(),
@@ -179,7 +184,9 @@ function ListaAsistencia() {
         $.ajax({
             type: "get",
             url: "GetTotalAlumnos.php",
-            data: { centro: param.idCentro },
+            data: { centro: param.idCentro,
+                    idPromocion: param.idPromocion
+            },
             success: function(r) {
                 $('#cantidadAlumnos').html(r);
             },
@@ -197,9 +204,9 @@ function ListaAsistencia() {
 
     Disponibilidadcontroles(param.fecha);
 
-
     // Lista solo si hay una fecha seleccionada
-    if (param.fecha != 0 && param.fecha != '') {
+    // La siguiente linea la quito porque el filtro de fecha vacía lo hago en GetHtmlCuadranteAsistenciaAlumnos.php
+    // if (param.fecha != 0 && param.fecha != '') {
 
         document.body.style.cursor = 'wait';
 
@@ -219,8 +226,7 @@ function ListaAsistencia() {
 
         })
 
-    }
-
+    // }
 
 }
 
@@ -232,6 +238,7 @@ function GenerarAsistencias() {
         document.body.style.cursor = 'wait';
 
         const params = {
+            idPromocion: $('#cbxNotifPromociones').val(),
             fecha: $('#cbxNotifFechas').val(),
             idCentro: $('#cbxNotifCentros').val(),
             idAula: $('#cbxNotifAulas').val(),
@@ -268,7 +275,8 @@ function EliminarAsistencias() {
             idCentro: $('#cbxNotifCentros').val(),
             idAula: $('#cbxNotifAulas').val(),
             curso: $('#cbxNotifCursos').val(),
-            horario: $('#cbxNotifHorarios').val()
+            horario: $('#cbxNotifHorarios').val(),
+            idPromocion: $('#cbxNotifPromociones').val()
         }
 
         $.ajax({
@@ -290,7 +298,7 @@ function EliminarAsistencias() {
 
 }
 
-function EnviarEmails() {
+function EnviarEmailsModoAsistencias() {
     const confirma = confirm("Se va a enviar correos de aviso a los alumnos del dia de la fecha seleccionada");
     if (confirma) {
 
@@ -307,6 +315,38 @@ function EnviarEmails() {
         $.ajax({
             type: "post",
             url: "EnviarCorreosAsistencia.php",
+            data: params,
+            success: function(r) {
+                ListaAsistencia();
+                document.body.style.cursor = 'auto';
+            },
+
+            error: function(error) {
+                document.body.style.cursor = 'auto';
+            }
+        });
+
+
+    }
+}
+
+function EnviarEmailsConNotas() {
+    const confirma = confirm("Se va a enviar correos con las notas de los alumnos");
+    if (confirma) {
+
+        document.body.style.cursor = 'wait';
+
+        const params = {
+            fecha: $('#cbxNotifFechas').val(),
+            idCentro: $('#cbxNotifCentros').val(),
+            idAula: $('#cbxNotifAulas').val(),
+            curso: $('#cbxNotifCursos').val(),
+            horario: $('#cbxNotifHorarios').val()
+        }
+
+        $.ajax({
+            type: "post",
+            url: "EnviarCorreosConNotas.php",
             data: params,
             success: function(r) {
                 ListaAsistencia();

@@ -2,12 +2,12 @@
 
 require_once("Db.php");
 
-$numero = $_POST["numero"];
+$idMatricula = $_POST["idMatricula"];
 
 try {
-    CovEliminarAlumno($numero);
+    EliminarMatricula($idMatricula);
 } catch (\Throwable $th) {
-    echo "El alumno no se ha eliminado";
+    echo "La matrícula no se ha eliminado";
 }
         
 

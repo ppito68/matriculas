@@ -7,10 +7,11 @@
     $idAula=$_POST['idAula'];
     $curso=$_POST['curso'];
     $horario=$_POST['horario'];
+    $idPromocion = $_POST["idPromocion"];
 
     $cadenaHtml='';
 
-    $grupo=CovAforoGrupo($fecha, $centro, $idAula, $curso, $horario);
+    $grupo=AforoGrupo($fecha, $centro, $idAula, $curso, $horario, $idPromocion);
 
     // DEPURACION echo '- fecha:' .  $fecha . ' - centro:' . $centro . ' - aula:' . $idAula . ' - curso:' . $curso . ' - horario:' . $horario;
 

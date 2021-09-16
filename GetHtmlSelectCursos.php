@@ -8,8 +8,11 @@
     $idAula=$_POST["idAula"];
     $fecha = $_POST["fecha"];
     $cursoPreSelect = $_POST['cursoPreSelect'];
+    $idPromocion = $_POST['idPromocion'];
+
     $nDiaSemana = isset($fecha) ? date("N", strtotime($fecha)) : 0; // obtiene el dia de la semana en cifra
     $sDiasSemana = "";
+
     if($nDiaSemana == 1 || $nDiaSemana == 3){ // Lunes y Miercoles
         $sDiasSemana = "M-W";
     }elseif($nDiaSemana == 2 || $nDiaSemana == 4){ // Martes y Jueves
@@ -17,7 +20,7 @@
     }
 
     $cadenaHtml='<option value="0"></option>';
-    $cursos=CovGetCursos($idCentro, $idAula, $sDiasSemana);
+    $cursos=GetCursosFromMatriculas($idPromocion, $idCentro, $idAula, $sDiasSemana );
 
     while($row=$cursos->fetch(PDO::FETCH_ASSOC)){ 
         $selected = ($cursoPreSelect==$row["curso"]) ? "selected" : "";

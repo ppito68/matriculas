@@ -7,8 +7,9 @@ $centro = $_POST["idCentro"];
 $idAula = $_POST["idAula"];
 $curso = $_POST["curso"];
 $horario = $_POST["horario"];
+$idPromocion = $_POST["idPromocion"];
 
-$grupos = CovGetGruposAInformar($fecha, $centro, $idAula, $curso, $horario);
+$grupos = GetGruposAInformar($fecha, $centro, $idAula, $curso, $horario, $idPromocion);
 
 while($grupo=$grupos->fetch(PDO::FETCH_ASSOC)){ // (1)
 
@@ -19,10 +20,10 @@ while($grupo=$grupos->fetch(PDO::FETCH_ASSOC)){ // (1)
     $diasSemana = $grupo['dias'];
     
     // obtener los alumnos del grupo en curso por orden de asistencia OnlIne
-    $alumnos = CovGetAsistenciasGrupo($fecha, $centroGrupo, $idAulaGrupo, $cursoGrupo, $horarioGrupo);
+    $alumnos = GetAsistenciasGrupo($fecha, $centroGrupo, $idAulaGrupo, $cursoGrupo, $horarioGrupo, $idPromocion);
     $alumnosArray = $alumnos->fetchAll();
 
-    CovEliminarAsistencias($alumnosArray, $fecha);
+    EliminarAsistencias($alumnosArray, $fecha);
         
 }
 

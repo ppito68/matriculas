@@ -23,9 +23,9 @@ function GetHtmlFillDiasSemana($idDiaSeleccionado){
     return $html;
 }
 
-function GetHtmlFillSelectCursos($cursoPreSelect){
+function GetHtmlFillSelectCursos($cursoPreSelect, $idPromocion){
     $html='<option value="0"></option>';
-    $cursos=CovGetCursos(0,0,"",2); // el 2 es para que ordene por curso
+    $cursos=GetCursosFromMatriculas($idPromocion, 0,0,"",2); // el 2 es para que ordene por curso
     foreach($cursos as $curso){ 
         $selected=$cursoPreSelect==$curso["curso"] ? "selected" : "";
         $html = $html . '<option value="' . $curso["curso"] . '" ' . $selected . '>' . $curso["curso"] . '</option>';
@@ -43,6 +43,17 @@ function GetHtmlFillSelectAulas($idAulaPreSelect){
     return $html;
 }
 
+function GetHtmlFillSelectProfesores($idProfesorPreSelect){
+    $cadenaHtml='<option value="0"></option>';
+    $profesores=GetProfesores();
+    while($row=$profesores->fetch(PDO::FETCH_ASSOC)){ 
+        $selected = ($idProfesorPreSelect==$row["id"]) ? "selected" : "";
+        $cadenaHtml = $cadenaHtml . '<option value="' . $row["id"] . '" ' . $selected . '>' . $row["nombre"] . '</option>';
+    }
+    return $cadenaHtml;
+}
+
+
 function GetHtmlFillSelectFechas($idPromocion, $diasArray){
     $html='<option value="0"></option>';
     $fechas=GetFechasCalendario($idPromocion, $diasArray);
@@ -52,15 +63,39 @@ function GetHtmlFillSelectFechas($idPromocion, $diasArray){
     return $html;
 }
 
-function GetHtmlFillSelectHorarios($horarioPreSelect){
+function GetHtmlFillSelectHorarios($horarioPreSelect, $idPromocion){
     $html='<option value="0"></option>';
-    $horarios=CovGetAllHorarios();
+    $horarios=GetAllHorarios($idPromocion);
     foreach($horarios as $horario){ 
         $selected=$horarioPreSelect==$horario["horario"] ? "selected" : "";
         $html = $html . '<option value="' . $horario["horario"] . '" ' . $selected . '>' . $horario["horario"] . '</option>';
     }
     return $html;
 }
+
+// Debe quedar seleccionada la promoción actual según la fecha del sistema
+function GetHtmlFillSelectPromociones(){
+
+    // obtiene la fecha del sistema para que quede selecccionada la promocion actual
+    $hoy = strtotime(date("Y-m-d", time()));
+
+    $html='<option value="0"></option>';
+    $promociones=GetPromociones();
+    foreach($promociones as $promocion){ 
+
+        // Establece la cadena -selected- para la promocion seleccionada si la fecha actual está entre la fecha desde y hasta de la promocion.
+        $fDesde=strtotime($promocion["fechaDesde"]); // obtiene la fecha DESDE de la promocion
+        $fHasta=strtotime($promocion["fechaHasta"]); // obtiene la fecha HASTA de la promocion
+        $selected= ( $hoy >= $fDesde && $hoy <= $fHasta ) ? "selected" : "";
+        
+        $html = $html . '<option value="' . $promocion["Id"] . '"' . $selected . '>' . $promocion["Promocion"] . '</option>';
+
+    }
+    return $html;
+
+}
+
+
 
 
 

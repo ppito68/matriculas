@@ -9,9 +9,10 @@
     $idAula=$_POST["idAula"];
     $curso = $_POST["curso"];
     $horarioPreSelect = $_POST['horarioPreSelect'];
+    $idPromocion = $_POST["idPromocion"];
 
     $cadenaHtml='<option value="0"></option>';
-    $horarios=CovGetHorarios($fecha, $idCentro, $idAula, $curso);
+    $horarios=CovGetHorarios($fecha, $idCentro, $idAula, $curso, $idPromocion);
 
     while($row=$horarios->fetch(PDO::FETCH_ASSOC)){ 
         $selected = ($horarioPreSelect==$row["horario"]) ? "selected" : "";

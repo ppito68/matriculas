@@ -28,7 +28,7 @@
 
     <script src="index.js"></script>
     <script src="frmNotificaciones.js"></script>
-    <script src="frmMttoAlumnos2021.js"></script>
+    <script src="frmMttoAlumnos.js"></script> 
 
     <style type="text/css">
         body { padding-top: 100px; } 
@@ -54,6 +54,9 @@
             <?php include("frmNotificaciones.php"); ?>
         </div>
     </header>
+
+    <div id="mttoNotas" class="container-fluid" style="display: none;">
+    </div>
 
 </body>
 </html>

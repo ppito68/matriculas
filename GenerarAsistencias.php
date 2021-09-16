@@ -7,6 +7,7 @@ $centro = $_POST["idCentro"];
 $idAula = $_POST["idAula"];
 $curso = $_POST["curso"];
 $horario = $_POST["horario"];
+$idPromocion = $_POST["idPromocion"];
 
 // Esta variable se creo para que recibiera la hora de toque de queda en época de covid. Si un grupo tenia un horario que abarcara la hora de esta variable, el objetivo era
 //  asignarle a todos los alumnos de ese grupo la asistencia en modo ONLINE. No se llegó a usar, por lo que le asigno a esta varible un null para que no proceda en el proceso 
@@ -32,7 +33,7 @@ function GrupoEnHorarioComprometido($grupo, $hora){
 
 // obtiene los dias comprometidos del calendario escolar desde el inicio de curso hasta el dia de la fecha para usarlo en (*1) para
 // conseguir el orden correcto en el que deben estar los alumnos para asignarle sus asistencias correspondientes
-$diasRecSet=CovGetDiasCalendario($fecha, false, false); // el primer false es para que no filtre el mes de la fecha. El segundo false es para que no incluya el parámetro $fecha en la consulta
+$diasRecSet=GetDiasCalendario($idPromocion, $fecha, false, false); // el primer false es para que no filtre el mes de la fecha. El segundo false es para que no incluya el parámetro $fecha en la consulta
 $diasArray = $diasRecSet->fetchAll(); // se pasa a un array porque hay que recorrelo varias veces
 
 
@@ -41,7 +42,7 @@ $diasArray = $diasRecSet->fetchAll(); // se pasa a un array porque hay que recor
 //  campo, pero para calcular los que deben asistir a clase y los que deben hace la clase online en cada grupo, estos parametros 
 //  son necesarios para dicho claculo, pero esos parametros no son los recibidos en esta funcion sino que los debe recoger del 
 //  grupo que se está iterando en (*3)
-$grupos = CovGetGruposAInformar($fecha, $centro, $idAula, $curso, $horario);
+$grupos = GetGruposAInformar($fecha, $centro, $idAula, $curso, $horario, $idPromocion);
 while($grupo=$grupos->fetch(PDO::FETCH_ASSOC)){ 
 
     // (*3) aqui es donde se recogen los parametros para calcular las asistencias
@@ -53,9 +54,9 @@ while($grupo=$grupos->fetch(PDO::FETCH_ASSOC)){
     
     // Obtener el total de las asistencias ya prefijadas en la fecha del proceso y restar esos modos de asist a los 
     //  aforos del grupo
-    $PrefijadosAsistidos = CovGetTotalAsistidos($fecha, $centroGrupo, $idAulaGrupo, $cursoGrupo, $horarioGrupo);
-    $prefijadosOnLine = CovGetTotalOnLine($fecha, $centroGrupo, $idAulaGrupo, $cursoGrupo, $horarioGrupo);
-    $prefijadosAusentes = CovGetTotalAusencias($fecha, $centroGrupo, $idAulaGrupo, $cursoGrupo, $horarioGrupo);
+    $PrefijadosAsistidos = GetTotalAsistidos($fecha, $centroGrupo, $idAulaGrupo, $cursoGrupo, $horarioGrupo, $idPromocion);
+    $prefijadosOnLine = GetTotalOnLine($fecha, $centroGrupo, $idAulaGrupo, $cursoGrupo, $horarioGrupo, $idPromocion);
+    $prefijadosAusentes = GetTotalAusencias($fecha, $centroGrupo, $idAulaGrupo, $cursoGrupo, $horarioGrupo, $idPromocion);
 
     // Calcula el total de las asistencias ON LINE  que se deben asignar RESTANDO las ya preasignadas al total aforo_covid 
     //  del grupo. Resta tambien los ausentes pues dejan plaza libre tambien para presenciales.
@@ -66,7 +67,7 @@ while($grupo=$grupos->fetch(PDO::FETCH_ASSOC)){
 
     // obtener los alumnos del grupo en curso
     $alumnosArray = array(); // en este aray se va introduciendo los datos del alumno que luwego se usa para grabar las asistencias
-    $alumnos = CovGetAsistenciasGrupo($fecha, $centroGrupo, $idAulaGrupo, $cursoGrupo, $horarioGrupo);
+    $alumnos = GetAsistenciasGrupo($fecha, $centroGrupo, $idAulaGrupo, $cursoGrupo, $horarioGrupo, $idPromocion);
     while($alumno=$alumnos->fetch(PDO::FETCH_ASSOC)){ 
 
 
@@ -105,7 +106,7 @@ while($grupo=$grupos->fetch(PDO::FETCH_ASSOC)){
         // recorre todas las fecha lectivas anteriores a la fecha de asignacion para obtener puntos por asistencias continuadas OL y Presenc.
         foreach($diasArray as $dia){ 
 
-            $asist = CovGetAsistencia( $dia['fecha'], $alumno['numero'] ); // obtiene la asistencia del alumno y día de la fecha en proceso
+            $asist = GetAsistencia( $dia['fecha'], $alumno['idMatricula'] ); // obtiene la asistencia del alumno y día de la fecha en proceso
             $puntosContinuidad = puntosPorContinuidad($asist); // Obtencion array con puntos para Criterios 3 y 4
 
             $puntosOnlineContinuos = ($puntosContinuidad["online"] > 0) ? ($puntosOnlineContinuos + $puntosContinuidad["online"]) : 0; 
@@ -120,7 +121,8 @@ while($grupo=$grupos->fetch(PDO::FETCH_ASSOC)){
         $vinoAClaseCuandoEraOnline = VinoAClaseCuandoEraOnline($alumno['numero'], $fecha);
 
         // Añade el alumno al array 
-        $alumnosArray[] = array (   "numero"=>$alumno['numero'], 
+        $alumnosArray[] = array (   "idMatricula"=>$alumno['idMatricula'], 
+                                    "numero"=>$alumno['numero'],
                                     "asignado"=>$alumno['asignado'], 
                                     "remoto"=>intval($alumno['remoto']), 
                                     "seAusentoDiaAnteriorSinAvisar" => $seAusentoDiaAnteriorSinAvisar, 
@@ -139,13 +141,13 @@ while($grupo=$grupos->fetch(PDO::FETCH_ASSOC)){
     $colOnLineContinuos = array_column($alumnosArray, 'onLineContinuos');
     $colPresencialesContinuados = array_column($alumnosArray, 'presencialesContinuos');
     $colRemotos = array_column($alumnosArray, 'remoto');
-    $colNumeros = array_column($alumnosArray, 'numero');
+    $colIdMatriculas = array_column($alumnosArray, 'idMatricula');
     array_multisort($colAusentadoDiaAnteriorSinAvisar, SORT_DESC,
                     $colVinoAClaseCuandoEraOnline, SORT_DESC,
                     $colOnLineContinuos, SORT_ASC,
                     $colPresencialesContinuados, SORT_DESC,
                     $colRemotos, SORT_ASC, 
-                    $colNumeros, SORT_DESC, $alumnosArray);
+                    $colIdMatriculas, SORT_DESC, $alumnosArray);
 
     // Bucle que asigna la asist correspondiente a cada alumno
     foreach($alumnosArray as &$alumno){ // se pone & para poder modificar el elemento $alumno
@@ -197,12 +199,11 @@ while($grupo=$grupos->fetch(PDO::FETCH_ASSOC)){
 
     }
     
-    CovGrabaAsistencias($alumnosArray, $fecha); // (*2)
+    GrabaAsistencias($alumnosArray, $fecha); // (*2)
         
 }
 
 $grupos->closeCursor();
-
 
 
 

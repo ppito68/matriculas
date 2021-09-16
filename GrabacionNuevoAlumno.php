@@ -1,16 +1,25 @@
 <?php
 
+$idPromocion = $_POST["idPromocion"];
+$idAlumno = $_POST["idAlumno"];
 $numero = $_POST["numero"];
 $nombre = $_POST["nombre"];
 $apellidos = $_POST["apellidos"];
-$centro = $_POST["centro"];
+$codigoPostal = $_POST["codPostal"];
+$domicilio = $_POST["domicilio"];
+$email = $_POST["email"];
+$email2 = $_POST["email2"];
+$fechaNacimiento = $_POST["fechaNacimiento"];
+$municipio = $_POST["municipio"];
+$nif = $_POST["nif"];
+$observaciones = $_POST["observaciones"];
+
+$idCentro = $_POST["centro"];
 $idAula = $_POST["aula"];
 $idProfesor = $_POST["profesor"];
 $curso = $_POST["curso"];
 $horario = $_POST["horario"];
 $dias = $_POST["dias"];
-$email = $_POST["email"];
-$email2 = $_POST["email2"];
 $url = $_POST["url"];
 $seEnviaCorreo = $_POST["seEnviaCorreo"];
 
@@ -18,34 +27,63 @@ $seEnviaCorreo = $seEnviaCorreo ? 1 : 0;
 
 require_once("Db.php");
 
-$res=CovGetAlumno($numero);
+$res=GetAlumno($numero);
+
+// *****  GRABACION DE DATOS DEL ALUMNO 
 
 // si el alumno ya existía, lo modifica
 if($alum=$res->fetch(PDO::FETCH_ASSOC)){
 
     try {
-        $r = CovModificacionAlumno($numero, $nombre, $apellidos, $centro, $idAula, $curso, $horario, $dias, $email, $email2, 
-                                    $url, $idProfesor, $seEnviaCorreo);
+        $r = ModificacionAlumno($idAlumno, $nombre, $apellidos, $codigoPostal, $domicilio, $email, $email2, $fechaNacimiento, $municipio, $nif, $observaciones);
         echo "El alumno se ha modificado correctamente";
     } catch (\Throwable $th) {
         echo 'ha ocurrido un error al modificar el alumno.';
     }
 
-
-
 }else{ // si NO existía el alumno, lo graba nuevo
 
     try {
-        $r = CovGrabacionAlumno($numero, $nombre, $apellidos, $centro, $idAula, $curso, $horario, $dias, $email, $email2, 
-                                $url, $idProfesor, $seEnviaCorreo);
-        echo "El alumno se ha grabado correctamente";
+        $r = GrabacionAlumno($numero, $nombre, $apellidos, $codigoPostal, $domicilio, $email, $email2, $fechaNacimiento, $municipio, $nif, $observaciones);
+
+        // lee el alumno recien grabado para obtener la id y pasarsela a la grabacion de la matricula
+        $resGetAl=GetAlumno($numero); 
+        if($al=$resGetAl->fetch(PDO::FETCH_ASSOC)){
+            $idAlumno = $al["id"];
+            echo "El alumno se ha grabado correctamente";
+        }
+    
     } catch (\Throwable $th) {
         echo 'ha ocurrido un error al crear el alumno: Error -> ' . $th->getMessage();
     }
 
-
 };
 
+
+$resMat=GetMatricula($idAlumno, $idPromocion);
+
+// *****  GRABACION DE DATOS DE LA MATRICULA 
+
+// si la matricula ya existía, la modifica
+if($mat=$resMat->fetch(PDO::FETCH_ASSOC)){
+
+    try {
+        $r = ModificacionMatricula($idAlumno, $idPromocion, $seEnviaCorreo, $curso, $dias, $email, $email2, $horario, $idAula, $idCentro, $idProfesor, $url);
+        echo "    La matrícula se ha modificado correctamente";
+    } catch (\Throwable $th) {
+        echo 'ha ocurrido un error al modificar el alumno.' .  $th->getMessage();;
+    }
+
+}else{ // si NO existía el alumno, lo graba nuevo
+
+    try {
+        $r = GrabacionMatricula($idAlumno, $idPromocion, $seEnviaCorreo, $curso, $dias, $email, $email2, $horario, $idAula, $idCentro, $idProfesor, $url);
+        echo "La matrícula se ha grabado correctamente";
+    } catch (\Throwable $th) {
+        echo 'ha ocurrido un error al crear el alumno: Error -> ' . $th->getMessage();
+    }
+
+};
 
 
 

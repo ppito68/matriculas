@@ -2,12 +2,14 @@
     
     require_once("Db.php");
 
-    $numero=$_GET["numero"];
+    $numeroAlumno = $_GET["numeroAlumno"];
 
-    $result = CovGetAlumno($numero);
+    $result = GetAlumno($numeroAlumno);
 
     $alumno = $result->fetch(PDO::FETCH_ASSOC);
+
     $json = json_encode($alumno);
+
     echo $json;
 
 
