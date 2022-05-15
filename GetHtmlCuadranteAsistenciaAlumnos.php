@@ -7,8 +7,8 @@ require_once("funcionesVarias.php");
 $idCentro=$_POST["idCentro"];
 $fecha = $_POST["fecha"];
 $idAula=$_POST["idAula"];
-$curso = $_POST["curso"];
-$horario = $_POST["horario"];
+$idCurso = $_POST["curso"];
+$idHorario = $_POST["horario"];
 $idPromocion = $_POST["idPromocion"];
 
 // ****************************** C A B E C E R A *********************************
@@ -58,7 +58,7 @@ if($fecha){
             </thead>';
 
     // Obtiene los alumnos con el cuadrante de asistencia
-    $alumnos=GetCuadranteMatriculas($idCentro, $idAula, $fecha, $curso, $horario, $idPromocion);
+    $alumnos=GetCuadranteMatriculas($idCentro, $idAula, $fecha, $idCurso, $idHorario, $idPromocion);
 
     $colAsist = $alumnos->columnCount() - 8;
 
@@ -66,8 +66,11 @@ if($fecha){
         '<tbody>
             <tr>';
 
+
+    // bucle ppal de recorrido de alumnos            
     while($alum=$alumnos->fetch(PDO::FETCH_ASSOC)){
 
+        // le coloca el icono de "no enviar email" si el alumno no se le envía su forma de asistir a clase.
         $imgNoEmail = (!$alum["comunicarAsistencia"])
                         ? '<img class="ml-1" src="./img/noemail.png" width="20px" height="20px">'
                         : '';
@@ -99,7 +102,7 @@ if($fecha){
                     onclick="MttoAlumno(' . $alum["numero"] . ')" 
                     style="cursor: pointer;"> 
                 <img src="' . $iconoNotas . '" width="20px" height="20px" 
-                    onclick="MttoNotasAlumno(' . $alum["numero"] . ')" 
+                    onclick="MttoNotasAlumno(' . $alum["idMatricula"] .  ')" 
                     style="cursor: pointer;"> 
                 <span>' .
                     $alum["nombre"] . 

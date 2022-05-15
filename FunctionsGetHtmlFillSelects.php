@@ -23,15 +23,29 @@ function GetHtmlFillDiasSemana($idDiaSeleccionado){
     return $html;
 }
 
-function GetHtmlFillSelectCursos($cursoPreSelect, $idPromocion){
+// -> Sustituyo esta funcion por la siguiente el 7/5/22 para que ya no haga la busqueda de los cursos segun las matriculas sino que muestre todos los cursos de la tabla 'sscursos'
+// function GetHtmlFillSelectCursos($cursoPreSelect, $idPromocion){
+//     $html='<option value="0"></option>';
+//     $cursos=GetCursosFromMatriculas($idPromocion, 0,0,"",2); // el 2 es para que ordene por curso
+//     foreach($cursos as $curso){ 
+//         $selected=$cursoPreSelect==$curso["curso"] ? "selected" : "";
+//         $html = $html . '<option value="' . $curso["curso"] . '" ' . $selected . '>' . $curso["curso"] . '</option>';
+//     }
+//     return $html;
+// }
+function GetHtmlFillSelectCursos($idCursoPreSelect){
     $html='<option value="0"></option>';
-    $cursos=GetCursosFromMatriculas($idPromocion, 0,0,"",2); // el 2 es para que ordene por curso
+    $cursos = GetCursos();
+
     foreach($cursos as $curso){ 
-        $selected=$cursoPreSelect==$curso["curso"] ? "selected" : "";
-        $html = $html . '<option value="' . $curso["curso"] . '" ' . $selected . '>' . $curso["curso"] . '</option>';
+        $selected = $idCursoPreSelect == $curso["id"] ? "selected" : "";
+        $html = $html . '<option value=' . $curso["id"] . ' ' . $selected . '>' . $curso["Descripcion"] . '</option>';
     }
     return $html;
 }
+
+
+
 
 function GetHtmlFillSelectAulas($idAulaPreSelect){
     $html='<option value="0"></option>';
@@ -63,12 +77,12 @@ function GetHtmlFillSelectFechas($idPromocion, $diasArray){
     return $html;
 }
 
-function GetHtmlFillSelectHorarios($horarioPreSelect, $idPromocion){
+function GetHtmlFillSelectHorarios($idHorarioPreSelect){
     $html='<option value="0"></option>';
-    $horarios=GetAllHorarios($idPromocion);
+    $horarios = GetAllHorarios();
     foreach($horarios as $horario){ 
-        $selected=$horarioPreSelect==$horario["horario"] ? "selected" : "";
-        $html = $html . '<option value="' . $horario["horario"] . '" ' . $selected . '>' . $horario["horario"] . '</option>';
+        $selected = $idHorarioPreSelect == $horario["id"] ? "selected" : "";
+        $html = $html . '<option value=' . $horario["id"] . ' ' . $selected . '>' . $horario["horario"] . '</option>';
     }
     return $html;
 }

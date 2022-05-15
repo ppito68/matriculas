@@ -22,7 +22,9 @@ function ConmutaAsistencia(fecha, idMatricula, id) {
 }
 
 function EliminarMatricula(idMatricula) {
-    const confirma = confirm("ATENCION!!! No uses está opción para dar de baja una matrícula. Estás segur@ de eliminar la matrícula del alumno ?");
+    const confirma = confirm("ATENCION!!! Esta opción elimina la matrícula del alumno.\r" +
+                                "Los datos personales del alumno permanecerán en la base de edatos para futuras matriculaciones \r" + 
+                                "¿ quiere eliminar la matrícula ?");
     if (confirma) {
 
         const param = {
@@ -31,7 +33,7 @@ function EliminarMatricula(idMatricula) {
 
         $.ajax({
             type: "post",
-            url: "EliminarAlumno.php",
+            url: "BajaMatricula.php",
             data: param,
             success: function(r) {
                 ListaAsistencia();
@@ -57,7 +59,7 @@ function GetListaAulas() {
         data: params,
         success: function(r) {
             $('#cbxNotifAulas').html(r);
-            GetListaCursos();
+            //GetListaCursos();
         },
 
         error: function(error) {
@@ -79,7 +81,6 @@ function GetListaFechas() {
         data: params,
         success: function(r) {
             $('#cbxNotifFechas').html(r);
-            ListaAsistencia();
         },
 
         error: function(error) {
@@ -90,17 +91,17 @@ function GetListaFechas() {
 
 function GetListaCursos() {
 
-    const params = {
-        idPromocion: $('#cbxNotifPromociones').val(),
-        idCentro: $('#cbxNotifCentros').val(),
-        fecha: $('#cbxNotifFechas').val(),
-        idAula: $('#cbxNotifAulas').val()
-    }
+    // const params = {
+    //     idPromocion: $('#cbxNotifPromociones').val(),
+    //     idCentro: $('#cbxNotifCentros').val(),
+    //     fecha: $('#cbxNotifFechas').val(),
+    //     idAula: $('#cbxNotifAulas').val()
+    // }
 
     $.ajax({
         type: "post",
         url: "GetHtmlSelectCursos.php",
-        data: params,
+        // data: params,
         success: function(r) {
             $('#cbxNotifCursos').html(r);
             GetListaHorarios();
@@ -115,21 +116,21 @@ function GetListaCursos() {
 
 function GetListaHorarios() {
 
-    const params = {
-        idPromocion: $('#cbxNotifPromociones').val(),
-        fecha: $('#cbxNotifFechas').val(),
-        idCentro: $('#cbxNotifCentros').val(),
-        idAula: $('#cbxNotifAulas').val(),
-        curso: $('#cbxNotifCursos').val()
-    }
+    // const params = {
+    //     idPromocion: $('#cbxNotifPromociones').val(),
+    //     fecha: $('#cbxNotifFechas').val(),
+    //     idCentro: $('#cbxNotifCentros').val(),
+    //     idAula: $('#cbxNotifAulas').val(),
+    //     curso: $('#cbxNotifCursos').val()
+    // }
 
     $.ajax({
         type: "post",
         url: "GetHtmlSelectHorarios.php",
-        data: params,
+        // data: params,
         success: function(r) {
             $('#cbxNotifHorarios').html(r);
-            ListaAsistencia();
+            // ListaAsistencia();
         },
 
         error: function(error) {
@@ -309,7 +310,8 @@ function EnviarEmailsModoAsistencias() {
             idCentro: $('#cbxNotifCentros').val(),
             idAula: $('#cbxNotifAulas').val(),
             curso: $('#cbxNotifCursos').val(),
-            horario: $('#cbxNotifHorarios').val()
+            horario: $('#cbxNotifHorarios').val(),
+            idPromocion: $('#cbxNotifPromociones').val()
         }
 
         $.ajax({
@@ -330,6 +332,7 @@ function EnviarEmailsModoAsistencias() {
     }
 }
 
+// envia las notas a un colectivo de alumnos
 function EnviarEmailsConNotas() {
     const confirma = confirm("Se va a enviar correos con las notas de los alumnos");
     if (confirma) {
@@ -341,14 +344,15 @@ function EnviarEmailsConNotas() {
             idCentro: $('#cbxNotifCentros').val(),
             idAula: $('#cbxNotifAulas').val(),
             curso: $('#cbxNotifCursos').val(),
-            horario: $('#cbxNotifHorarios').val()
+            horario: $('#cbxNotifHorarios').val(),
+            idPromocion: $('#cbxNotifPromociones').val()
         }
 
         $.ajax({
             type: "post",
             url: "EnviarCorreosConNotas.php",
             data: params,
-            success: function(r) {
+            success: function() {
                 ListaAsistencia();
                 document.body.style.cursor = 'auto';
             },
@@ -360,4 +364,47 @@ function EnviarEmailsConNotas() {
 
 
     }
+}
+
+
+// envia las notas a un alumno
+function EnviarNotas(idMatricula, nombreCompletoAlumno, emailAlumno, mostrarSolo) {
+
+
+    if(!mostrarSolo){
+
+        const confirma = confirm("Se va a enviar correos con las notas de los alumnos");
+
+        if(!confirma){
+            return;
+        }
+
+    }
+
+    document.body.style.cursor = 'wait';
+
+    $.ajax({
+        type: "post",
+        url: "EnviarNotas.php",
+        data: {
+            idMatricula: idMatricula,
+            nombreCompletoAlumno: nombreCompletoAlumno,
+            emailAlumno: emailAlumno,
+            mostrarSolo: mostrarSolo,
+        },
+        success: function() {
+            if(mostrarSolo){
+                window.open("./pdfs/"+idMatricula+"pdf"); //$('#mttoNotas').html(r);
+            }
+            ListaAsistencia();
+            document.body.style.cursor = 'auto';
+        },
+
+        error: function(error) {
+            console.log(error);
+            document.body.style.cursor = 'auto';
+        }
+    });
+
+
 }

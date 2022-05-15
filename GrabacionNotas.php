@@ -21,6 +21,13 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST'){
     $comportamiento1 = is_null($_POST["comportamiento1"]) ? 0 : $_POST["comportamiento1"];;
     $comportamiento2 = is_null($_POST["comportamiento2"]) ? 0 : $_POST["comportamiento2"];
     $examenOral2 = is_null($_POST["examenOral"]) ? 0 : $_POST["examenOral"];
+
+
+    // $examDone1 = is_null($_POST["examDone1"]) ? 0 : $_POST["examDone1"];
+    // $examDone2 = is_null($_POST["examDone2"]) ? 0 : $_POST["examDone2"];
+    // $examDone1 = ($examDone1) ? 1 : 0 ;
+    // $examDone2 = ($examDone2) ? 1 : 0 ;
+
     $unit1 = is_null($_POST["unit1"]) ? 0 : $_POST["unit1"];
     $unit2 = is_null($_POST["unit2"]) ? 0 : $_POST["unit2"];
     $unit3 = is_null($_POST["unit3"]) ? 0 : $_POST["unit3"];
@@ -72,7 +79,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST'){
 
     }else{ // si NO existía el alumno, lo graba nuevo
 
-        try {
+        //try {
             $r = GrabacionNotas($idMatricula, $speaking1, $speaking2, $listening1, $listening2, $writing1, $writing2, $reading1, $reading2,
                                     $exEscrito1, $exEscrito2, $participacion1, $participacion2, $comportamiento1, $comportamiento2, $examenOral2,
                                     $unit1, $unit2, $unit3, $unit4, $unit5, $unit6, $unit7, $unit8, $unit9, $unit10, $unit11, $unit12, $unit13,
@@ -81,10 +88,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST'){
             // echo 'grabacion ok';
 
 
-        } catch (\Throwable $th) {
+        //} catch (\Throwable $th) {
             // echo 'error al grabar->' . $th->getMessage();
-            header("HTTP/1.1 400 ERROR AL GRABAR LAS NOTAS");
-        }
+        //    header("HTTP/1.1 400 ERROR AL GRABAR LAS NOTAS");
+        //}
 
 
     };

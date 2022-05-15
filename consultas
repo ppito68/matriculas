@@ -13,3 +13,18 @@ where c.modoAsistencia = 'o' AND fm.centro = 1
                             and fm.horario = '999'
                             and fm.dias = 'lll'
                             and fm.idAula = 1
+
+
+
+
+
+
+// 10/02/21.- Esta consulta muestra los alumnos que han sacado una nota <= 6 en el writing. Cambiar promocion, tipo de examen para ver otras notas.
+SELECT c.centro, a.Nombre, a.Apellidos, a.emailPrincipal, a.TelefonoAlumno, a.TelefonoTutor1, a.TelefonoTutor2, m.curso, p.nombre as profesor, m.horario, m.dias, n.writing1  
+FROM alumnos a 
+		inner join matriculas m on m.idAlumno = a.id
+                inner join notas n on n.idMatricula = m.id
+                inner join stProfesores p on p.id = m.idProfesor
+                inner join ssCentros c on c.id = m.idCentro
+ where n.writing1 <= 5 and m.idPromocion = 2
+ order by c.centro, m.curso, p.nombre, m.horario

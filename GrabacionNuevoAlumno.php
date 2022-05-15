@@ -17,8 +17,14 @@ $observaciones = $_POST["observaciones"];
 $idCentro = $_POST["centro"];
 $idAula = $_POST["aula"];
 $idProfesor = $_POST["profesor"];
-$curso = $_POST["curso"];
-$horario = $_POST["horario"];
+
+// $curso = $_POST["curso"];
+$idCurso = $_POST["curso"];
+
+//$horario = $_POST["horario"];
+$idHorario = $_POST["horario"];
+
+
 $dias = $_POST["dias"];
 $url = $_POST["url"];
 $seEnviaCorreo = $_POST["seEnviaCorreo"];
@@ -27,7 +33,7 @@ $seEnviaCorreo = $seEnviaCorreo ? 1 : 0;
 
 require_once("Db.php");
 
-$res=GetAlumno($numero);
+$res = GetAlumno($numero);
 
 // *****  GRABACION DE DATOS DEL ALUMNO 
 
@@ -60,7 +66,7 @@ if($alum=$res->fetch(PDO::FETCH_ASSOC)){
 };
 
 
-$resMat=GetMatricula($idAlumno, $idPromocion);
+$resMat=GetMatricula($idAlumno, $idPromocion, true);
 
 // *****  GRABACION DE DATOS DE LA MATRICULA 
 
@@ -68,7 +74,7 @@ $resMat=GetMatricula($idAlumno, $idPromocion);
 if($mat=$resMat->fetch(PDO::FETCH_ASSOC)){
 
     try {
-        $r = ModificacionMatricula($idAlumno, $idPromocion, $seEnviaCorreo, $curso, $dias, $email, $email2, $horario, $idAula, $idCentro, $idProfesor, $url);
+        $r = ModificacionMatricula($idAlumno, $idPromocion, $seEnviaCorreo, $idCurso, $dias, $email, $email2, $idHorario, $idAula, $idCentro, $idProfesor, $url);
         echo "    La matrícula se ha modificado correctamente";
     } catch (\Throwable $th) {
         echo 'ha ocurrido un error al modificar el alumno.' .  $th->getMessage();;
@@ -77,7 +83,7 @@ if($mat=$resMat->fetch(PDO::FETCH_ASSOC)){
 }else{ // si NO existía el alumno, lo graba nuevo
 
     try {
-        $r = GrabacionMatricula($idAlumno, $idPromocion, $seEnviaCorreo, $curso, $dias, $email, $email2, $horario, $idAula, $idCentro, $idProfesor, $url);
+        $r = GrabacionMatricula($idAlumno, $idPromocion, $seEnviaCorreo, $idCurso, $dias, $email, $email2, $idHorario, $idAula, $idCentro, $idProfesor, $url);
         echo "La matrícula se ha grabado correctamente";
     } catch (\Throwable $th) {
         echo 'ha ocurrido un error al crear el alumno: Error -> ' . $th->getMessage();

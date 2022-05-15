@@ -3,29 +3,35 @@ $(document).ready(function() {
     // Combos del Panel de asistencias
     $('#cbxNotifPromociones').change(() => {
         GetListaFechas();
+        ListaAsistencia();
     });
 
     $('#cbxNotifCentros').change(() => {
         GetListaAulas();
+        ListaAsistencia();
     });
 
     $('#cbxNotifDiasSemana').change(() => {
         GetListaFechas();
+        ListaAsistencia();
+
     })
 
-    $('#cbxNotifFechas').change(function() {
+    $('#cbxNotifFechas').change( () => {
         ListaAsistencia();
     });
 
-    $('#cbxNotifAulas').change(function() {
-        GetListaCursos();
+    $('#cbxNotifAulas').change( () => {
+        //GetListaCursos();
+        ListaAsistencia();
     });
 
-    $('#cbxNotifCursos').change(function() {
-        GetListaHorarios();
+    $('#cbxNotifCursos').change( () => {
+        //GetListaHorarios();
+        ListaAsistencia();
     });
 
-    $('#cbxNotifHorarios').change(function() {
+    $('#cbxNotifHorarios').change( () => {
         ListaAsistencia();
     });
 
@@ -75,15 +81,44 @@ function MttoAlumno(numeroAlumno) {
 }
 
 
-function MttoNotasAlumno(numeroAlumno){
+// function MttoNotasAlumno(numeroAlumno){
 
-    // oculta el panel de asistencias y muestra el panel de las notas del alumno
+//     // oculta el panel de asistencias y muestra el panel de las notas del alumno
+//     document.getElementById('notificaciones').style.display = 'none';
+//     document.getElementById('mttoNotas').style.display = 'block';
+
+    
+//     const param = {
+//         numero: numeroAlumno
+//     }
+
+//     $.ajax({
+//         type: "get",
+//         url: "frmMttoNotas.php",
+//         data: param,
+//         success: function(r) {
+//             $('#mttoNotas').html(r);
+//         },
+
+//         error: function(error) {
+//             //document.body.style.cursor = 'auto';
+//             console.log(error);
+//         }
+
+//     })
+
+
+// }
+function MttoNotasAlumno(idMatricula){ //, idAlumno){
+
+    // moculta el panel de asistencias y muestra el panel de las notas del alumno
     document.getElementById('notificaciones').style.display = 'none';
     document.getElementById('mttoNotas').style.display = 'block';
 
     
     const param = {
-        numero: numeroAlumno
+        idMatricula: idMatricula,
+        //idAlumno: idAlumno,
     }
 
     $.ajax({
@@ -95,8 +130,7 @@ function MttoNotasAlumno(numeroAlumno){
         },
 
         error: function(error) {
-            //document.body.style.cursor = 'auto';
-            console.log(error);
+            document.body.style.cursor = 'auto';
         }
 
     })
@@ -123,6 +157,10 @@ function GrabaNotas(){
         comportamiento1: document.getElementById('comportamiento1').value,
         comportamiento2: document.getElementById('comportamiento2').value,
         examenOral: document.getElementById('examenOral').value,
+
+        // examDone1: document.getElementById('examDone1').value,
+        // examDone2: document.getElementById('examDone2').value,
+
         unit1: document.getElementById('unit1').value,
         unit2: document.getElementById('unit2').value,
         unit3: document.getElementById('unit3').value,
@@ -154,7 +192,7 @@ function GrabaNotas(){
         type: "post",
         url: "GrabacionNotas.php",
         data: param,
-        success: function(r) {
+        success: function() {
             PanelAsistencias();
         },
 

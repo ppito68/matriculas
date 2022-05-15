@@ -8,6 +8,7 @@ $centro = $_POST["idCentro"];
 $idAula = $_POST["idAula"];
 $curso = $_POST["curso"];
 $horario = $_POST["horario"];
+$idPromocion = $_POST["idPromocion"];
 
 
 // obtiene el dia de la semana en letras
@@ -19,7 +20,7 @@ if($fecha==0){
 
 $incidencias="";
 
-$grupos = CovGetGruposAInformar($fecha, $centro, $idAula, $curso, $horario);
+$grupos = GetGruposAInformar($fecha, $centro, $idAula, $curso, $horario, $idPromocion);
 while($grupo=$grupos->fetch(PDO::FETCH_ASSOC)){ 
 
     // *** A partir del 2021 despues de la navidad se informa a todos los grupos, tengan o no online
@@ -33,7 +34,7 @@ while($grupo=$grupos->fetch(PDO::FETCH_ASSOC)){
         $diasSemana = $grupo['dias'];
         
         // obtener los alumnos del grupo en curso por orden de asistencia OnlIne
-        $alumnos = CovGetAsistenciasGrupo($fecha, $centroGrupo, $idAulaGrupo, $cursoGrupo, $horarioGrupo);
+        $alumnos = GetAsistenciasGrupo($fecha, $centroGrupo, $idAulaGrupo, $cursoGrupo, $horarioGrupo, $idPromocion);
         $fechaConFormato = date("d-m-Y", strtotime($fecha));
         while($alumno=$alumnos->fetch(PDO::FETCH_ASSOC)){ 
 

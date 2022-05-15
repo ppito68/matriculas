@@ -63,17 +63,17 @@
 
     function GetAlumnoById($id){
             $con=PdoOpenCon();
-            $sql="SELECT * FROM ssalumnos WHERE id = :id";
+            $sql="SELECT * FROM alumnos WHERE id = :id";
             $recSet=$con->prepare($sql);
             $recSet->execute(array(":id"=>$id));
             return $recSet->fetch(PDO::FETCH_ASSOC);
-        }
+    }
 
-        function GetNombreYApellidosAlumno($id){
-            $reg=GetAlumnoById($id);
-            return $reg['Nombre'] . ' ' . $reg['Apellidos'];
-        }
-        
+    function GetNombreYApellidosAlumno($id){
+        $reg=GetAlumnoById($id);
+        return $reg['Nombre'] . ' ' . $reg['Apellidos'];
+    }
+    
     // Obtiene el alumno con el nif recibido. Carga una columna mas si ha estado matriculado en el curso 19-20 que será null si no lo estuvo.
     function GetAlumnoNif($Nif){
         $con=PdoOpenCon();
@@ -427,6 +427,14 @@
         return $recSet; 
     }
 
+    function GetPromocion($id){
+        $con=PdoOpenCon();
+        $sql="SELECT * FROM ssPromociones where id = " . $id; 
+        $recSet=$con->prepare($sql);
+        $recSet->execute();
+        return $recSet->fetch(PDO::FETCH_ASSOC); 
+    }
+
     function GetProfesores(){
         $con=PdoOpenCon();
         $sql="SELECT * FROM stProfesores order by nombre"; 
@@ -493,7 +501,7 @@
         $sql=" SELECT * FROM viewGrupos g
                 WHERE idPromocion = " . $idPromocion . $filtroDias . $filtroCentro . $filtroAula . $filtroCurso . $filtroHorario;
         
-        // --- LINEA DE DEPURACION->        echo "Consulta del Grupo: " . $sql . "\n";
+        // --- LINEA DE DEPURACION-> echo "Consulta del Grupo: " . $sql . "\n"; 
         
         $recSet=$con->prepare($sql);
         $recSet->execute();
@@ -504,15 +512,15 @@
     //  donde los primeros son los que MENOS han echo clases online. Los alumnos que hayan hecho las mismas clases online se 
     //   ordenan por orden descendente segun su numero, por poner un orden.
     // Params: $fechaImparticion.- Tomará los datos con fecha anterior a ésta 
-    function GetCuadranteMatriculas($centro, $idAula, $fechaImparticion, $curso, $horario, $idPromocion){
+    function GetCuadranteMatriculas($centro, $idAula, $fechaImparticion, $idCurso, $idHorario, $idPromocion){
         
     // LINEA DE DEPURACION var_dump($centro, $idAula, $fechaImparticion, $curso, $horario, $idPromocion);
 
         $mes = date("m", strtotime($fechaImparticion));
         $filtroCentro = $centro > 0 ? " AND au.idCentro = " . $centro : "";
         $filtroAula = $idAula > 0 ? " AND idAula = " . $idAula : "";
-        $filtroCurso = $curso == "" || $curso == '0' ? "" : " AND curso = '" . $curso . "' ";
-        $filtroHorario = $horario != 0 ? " AND horario = '" . $horario . "' "  : "";
+        $filtroCurso = $idCurso == 0  ? "" : " AND idCurso = " . $idCurso ;
+        $filtroHorario = $idHorario == 0 ? "" : " AND idHorario = " . $idHorario ;
 
         $filtroDiaSemana = "";
         $diaSemana = 0;
@@ -558,9 +566,9 @@
         $diasRecSet->closeCursor();
 
         // Consulta principal
-        $sql = "SELECT fm.id as idMatricula, au.Aula, alu.numeroAlumno as numero, CONCAT(alu.apellidos, ', ' , alu.Nombre) as nombre, fm.curso, fm.horario, fm.dias, 
-                    p.nombre as profesor, fm.comunicarAsistencia,
-                    (select ifnull(enviado2,-1) from notas where idMatricula = fm.id) as notasEnviadas,
+        $sql = "SELECT fm.id as idMatricula, au.Aula, alu.numeroAlumno as numero, CONCAT(alu.apellidos, ', ' , alu.Nombre) as nombre, fm.idCurso, cur.descripcion as curso,
+                 fm.idHorario, hor.horario, fm.dias, p.nombre as profesor, fm.comunicarAsistencia, fm.idAlumno,
+                    (select ifnull(enviado1,-1) from notas where idMatricula = fm.id) as notasEnviadas,
                     (  
                         (select count(idMatricula) 
                             from stControlAsistencia  
@@ -604,15 +612,22 @@
                 " FROM matriculas fm 
                     INNER JOIN ssAulas au ON au.id = fm.idAula
                     INNER JOIN alumnos alu on alu.id = fm.idAlumno
+                    INNER JOIN  sscursos cur on cur.id = fm.idCurso
+                    INNER JOIN ssHorarios hor on hor.id = fm.idHorario
                     LEFT JOIN stProfesores p ON p.id = fm.idProfesor
-                WHERE idPromocion = " . $idPromocion . $filtroCentro . $filtroAula . $filtroDiaSemana . $filtroCurso . $filtroHorario .
-                " GROUP BY au.Aula, alu.numeroAlumno, alu.nombre, alu.apellidos, fm.curso, fm.horario, fm.dias
+                WHERE fechaBaja is null AND idPromocion = :idPromocion " . $filtroCentro . $filtroAula . $filtroDiaSemana . $filtroCurso . $filtroHorario .
+                " GROUP BY au.Aula, alu.numeroAlumno, alu.nombre, alu.apellidos, fm.idCurso, fm.idHorario, fm.dias
                 ORDER BY fm.horario, idAula, alu.apellidos, alu.numeroAlumno desc";
 // var_dump($sql);                 
         $recSet=$con->prepare($sql);
-        $recSet->execute(array(':fecha'=>$fechaImparticion));
+        $recSet->execute(array(':fecha' => $fechaImparticion, ':idPromocion' => $idPromocion ));
         return $recSet; 
     }
+
+
+
+
+
 
     // Devuelve los dias lectivos del calendario hasta la fecha recibida como parametro inclusive. 
     // Solo devuelve los dias pertenecientes al mes de la fecha.
@@ -892,33 +907,48 @@
     //     return $recSet; 
     // }
 
-    function GetCursos($idCentro, $idAula){
+    // esta funcion la quito el 6/5/22 porque no se llama ya desde ningun sitio y construyo la que viene a continuacion para el curso 22-23 con una nueva optimizacion de la tabla 
+    //      "matriculas" que no incluia el campo idCurso y que se incluye para esta promocion
+    // function GetCursos($idCentro, $idAula){
 
-        // Crea el filtro del Aula. Este filtro hay que activarlo tanto si filtra el Aula como si filtra el Centro, 
-        // ya que las clausulas INNER para enlazar con las aulas es intermediaria para enlazar con los centros. 
-        $filtroInnerAula = $idAula > 0 || $idCentro > 0
-            ? " INNER JOIN Grupos g ON g.IdCurso = cur.id
-                INNER JOIN ssAulas au ON au.id = g.IdAula "
-            : "";
-        $filtroWhereAula = $idAula > 0 ? " AND au.id = " . $idAula  : "";
+    //     // Crea el filtro del Aula. Este filtro hay que activarlo tanto si filtra el Aula como si filtra el Centro, 
+    //     // ya que las clausulas INNER para enlazar con las aulas es intermediaria para enlazar con los centros. 
+    //     $filtroInnerAula = $idAula > 0 || $idCentro > 0
+    //         ? " INNER JOIN Grupos g ON g.IdCurso = cur.id
+    //             INNER JOIN ssAulas au ON au.id = g.IdAula "
+    //         : "";
+    //     $filtroWhereAula = $idAula > 0 ? " AND au.id = " . $idAula  : "";
         
-        // Crea el filtro del Centro
-        $filtroInnerCentro = $idCentro > 0 
-            ? " INNER JOIN ssCentros cen ON cen.id = au.idCentro  "
-            : "";
-        $filtroWhereCentro = $idCentro > 0 ? ' AND au.idCentro = :idCentro ' : '';
+    //     // Crea el filtro del Centro
+    //     $filtroInnerCentro = $idCentro > 0 
+    //         ? " INNER JOIN ssCentros cen ON cen.id = au.idCentro  "
+    //         : "";
+    //     $filtroWhereCentro = $idCentro > 0 ? ' AND au.idCentro = :idCentro ' : '';
 
         
-        // Monta la cadena completa de la consulta
-        $sql="SELECT DISTINCT cur.* FROM sscursos cur " . $filtroInnerAula . $filtroInnerCentro . 
-            " WHERE 1 = 1 " . $filtroWhereCentro . $filtroWhereAula . " ORDER BY Descripcion";
+    //     // Monta la cadena completa de la consulta
+    //     $sql="SELECT DISTINCT cur.* FROM sscursos cur " . $filtroInnerAula . $filtroInnerCentro . 
+    //         " WHERE 1 = 1 " . $filtroWhereCentro . $filtroWhereAula . " ORDER BY Descripcion";
 
-            echo $sql;
+    //         echo $sql;
+
+    //     // Abre conexion, prepara la consulta, la ejecuta y devuelve el array
+    //     $con=PdoOpenCon();
+    //     $recSet=$con->prepare($sql);
+    //     $recSet->execute(array(":idCentro"=>$idCentro)); //, ":idAula"=>$idAula));
+    //     return $recSet; 
+    // }
+
+    // esta fucnion la creé para el curso 22-23
+    function GetCursos(){
+
+        // cadena de la consulta
+        $sql="SELECT * FROM sscursos ORDER BY Descripcion";
 
         // Abre conexion, prepara la consulta, la ejecuta y devuelve el array
-        $con=PdoOpenCon();
-        $recSet=$con->prepare($sql);
-        $recSet->execute(array(":idCentro"=>$idCentro)); //, ":idAula"=>$idAula));
+        $con = PdoOpenCon();
+        $recSet = $con->prepare($sql);
+        $recSet->execute(); //, ":idAula"=>$idAula));
         return $recSet; 
     }
 
@@ -957,9 +987,17 @@
         return $recSet; 
     }
 
-    function GetAllHorarios($idPromocion){
+    // -> 7/5/22.- para la promocion 22-23 no se muestran los horarios de de la tabla matriculas sino la tabla "sshorarios"
+    // function GetAllHorarios($idPromocion){
+    //     $con=PdoOpenCon();
+    //     $sql="select distinct horario from matriculas where idPromocion = " . $idPromocion . " order by horario";
+    //     $recSet=$con->prepare($sql);
+    //     $recSet->execute();
+    //     return $recSet; 
+    // }
+    function GetAllHorarios(){
         $con=PdoOpenCon();
-        $sql="select distinct horario from matriculas where idPromocion = " . $idPromocion . " order by horario";
+        $sql="select * from ssHorarios order by horario";
         $recSet=$con->prepare($sql);
         $recSet->execute();
         return $recSet; 
@@ -1044,6 +1082,24 @@
         return $result; 
     }
 
+
+    function BajaMatricula($idMatricula, $fechaBaja){
+
+        try {
+            $con=PdoOpenCon();
+            $sql = "UPDATE matriculas set fechaBaja = :fechaBaja WHERE id = :id";
+            $op = $con->prepare($sql);
+            $result = $op->execute(     array ( ":id" => $idMatricula, ":fechaBaja" => $fechaBaja )    );
+            return $result; 
+    
+        } catch (\Throwable $e) {
+
+            throw $e;
+        }
+
+
+    }
+
     function EliminarMatricula($idMatricula){
 
         try {
@@ -1079,34 +1135,50 @@
         return $recSet; 
     }
 
-    // busca una matricula según el id del alumno y la id promocion
-    function GetMatricula($idAlumno, $idPromocion){
+    function GetAlumnoPorMatricula($idMatricula){
         $con=PdoOpenCon();
-        $sql="SELECT * FROM matriculas WHERE idAlumno = :idAlumno AND idpromocion = :idPromocion";
+        $sql="SELECT a.*, p.nombre as profesor, m.curso, m.horario, m.dias, prom.Promocion  FROM alumnos a 
+                                inner join matriculas m on a.id = m.idAlumno 
+                                inner join stProfesores p on p.id = m.idProfesor
+                                inner join ssPromociones prom on prom.Id = m.idPromocion
+                WHERE m.id = :idMatricula";
+        $recSet=$con->prepare($sql);
+        $recSet->execute(array(":idMatricula"=>$idMatricula));
+        return $recSet; 
+    }
+
+
+    // busca una matricula según el id del alumno y la id promocion
+    function GetMatricula($idAlumno, $idPromocion, $excluirBajas){
+
+        $filtroExcluirBajas = ( $excluirBajas ) ? ' AND fechaBaja is null  ' : '' ;
+
+        $con=PdoOpenCon();
+        $sql="SELECT * FROM matriculas WHERE idAlumno = :idAlumno AND idpromocion = :idPromocion" . $filtroExcluirBajas;
         $recSet=$con->prepare($sql);
         $recSet->execute(array(":idAlumno"=>$idAlumno, ":idPromocion"=>$idPromocion));
         return $recSet; 
     }
 
-    function GrabacionMatricula($idAlumno, $idPromocion, $comunicarAsistencia, $curso, $dias, $email, $email2, $horario, $idAula, $idCentro, $idProfesor, $url){
+    function GrabacionMatricula($idAlumno, $idPromocion, $comunicarAsistencia, $idCurso, $dias, $email, $email2, $idHorario, $idAula, $idCentro, $idProfesor, $url){
         $con=PdoOpenCon();
-        $sql="INSERT INTO matriculas (idAlumno, idPromocion, comunicarAsistencia, curso, dias, email, email2, horario, idAula, idCentro, idProfesor, url ) 
-                VALUES (:idAlumno, :idPromocion, :comunicarAsistencia, :curso, :dias, :email, :email2, :horario, :idAula, :idCentro, :idProfesor, :url  )";
+        $sql="INSERT INTO matriculas (idAlumno, idPromocion, comunicarAsistencia, idCurso, dias, email, email2, idHorario, idAula, idCentro, idProfesor, url ) 
+                VALUES (:idAlumno, :idPromocion, :comunicarAsistencia, :idCurso, :dias, :email, :email2, :idHorario, :idAula, :idCentro, :idProfesor, :url  )";
         $op=$con->prepare($sql);
-        $result=$op->execute(   array(":idAlumno"=>$idAlumno, ":idPromocion"=>$idPromocion, ":comunicarAsistencia"=> $comunicarAsistencia, ":curso"=>$curso, 
-                                   ":dias"=>$dias, ":email"=>$email, ":email2"=>$email2, ":horario"=>$horario, ":idAula"=>$idAula, ":idCentro"=>$idCentro, 
+        $result=$op->execute(   array(":idAlumno"=>$idAlumno, ":idPromocion"=>$idPromocion, ":comunicarAsistencia"=> $comunicarAsistencia, ":idCurso"=>$idCurso, 
+                                   ":dias"=>$dias, ":email"=>$email, ":email2"=>$email2, ":idHorario"=>$idHorario, ":idAula"=>$idAula, ":idCentro"=>$idCentro, 
                                    ":idProfesor"=>$idProfesor, ":url"=>$url)      );
         return $result; 
     }
 
-    function ModificacionMatricula($idAlumno, $idPromocion, $comunicarAsistencia, $curso, $dias, $email, $email2, $horario, $idAula, $idCentro, $idProfesor, $url){
+    function ModificacionMatricula($idAlumno, $idPromocion, $comunicarAsistencia, $idCurso, $dias, $email, $email2, $idHorario, $idAula, $idCentro, $idProfesor, $url){
         $con=PdoOpenCon();
-        $sql="UPDATE matriculas SET comunicarAsistencia = :comunicarAsistencia, curso = :curso, dias = :dias, email = :email, email2 = :email2, horario = :horario,
+        $sql="UPDATE matriculas SET comunicarAsistencia = :comunicarAsistencia, idCurso = :idCurso, dias = :dias, email = :email, email2 = :email2, idHorario = :idHorario,
                                     idAula = :idAula, idCentro = :idCentro, idProfesor = :idProfesor, url = :url
                 WHERE idAlumno = :idAlumno AND idPromocion = :idPromocion";
         $op=$con->prepare($sql);
-        $result=$op->execute(   array(":idAlumno"=>$idAlumno, ":idPromocion"=>$idPromocion, ":comunicarAsistencia"=> $comunicarAsistencia, ":curso"=>$curso, 
-                                ":dias"=>$dias, ":email"=>$email, ":email2"=>$email2, ":horario"=>$horario, ":idAula"=>$idAula, ":idCentro"=>$idCentro, 
+        $result=$op->execute(   array(":idAlumno"=>$idAlumno, ":idPromocion"=>$idPromocion, ":comunicarAsistencia"=> $comunicarAsistencia, ":idCurso"=>$idCurso, 
+                                ":dias"=>$dias, ":email"=>$email, ":email2"=>$email2, ":idHorario"=>$idHorario, ":idAula"=>$idAula, ":idCentro"=>$idCentro, 
                                 ":idProfesor"=>$idProfesor, ":url"=>$url)      );
         return $result; 
     }
@@ -1157,12 +1229,21 @@
 
 
     // Esta funcion obtiene las notas del alumno y los datos de éste de la tabla stFM2021. Esto es provisional para V.1. 
+    // function GetNotas($idMatricula){
+    //     $con=PdoOpenCon();
+    //     $sql = "SELECT n.*, fm.*, prof.nombre as nombreProfesor FROM notas n 
+    //                         inner join stFM2021 fm on fm.id = n.idMatricula 
+    //                         inner join stProfesores prof on prof.id = fm.idProfesor
+    //             WHERE n.idMatricula = :idMatricula";
+    //     $recSet=$con->prepare($sql);
+    //     $recSet->execute(array(":idMatricula"=>$idMatricula));
+    //     return $recSet; 
+    // }
+
+
     function GetNotas($idMatricula){
         $con=PdoOpenCon();
-        $sql = "SELECT n.*, fm.*, prof.nombre as nombreProfesor FROM notas n 
-                            inner join stFM2021 fm on fm.id = n.idMatricula 
-                            inner join stProfesores prof on prof.id = fm.idProfesor
-                WHERE n.idMatricula = :idMatricula";
+        $sql = "SELECT  * FROM notas WHERE idMatricula = :idMatricula";
         $recSet=$con->prepare($sql);
         $recSet->execute(array(":idMatricula"=>$idMatricula));
         return $recSet; 
@@ -1170,16 +1251,16 @@
 
     function NotasEnviadas($idMatricula){
         $con=PdoOpenCon();
-        $sql = "SELECT enviado2 from notas WHERE idMatricula = :idMatricula";
+        $sql = "SELECT enviado1 from notas WHERE idMatricula = :idMatricula";
         $recSet=$con->prepare($sql);
         $recSet->execute(array(":idMatricula"=>$idMatricula));
         $notas=$recSet->fetch(PDO::FETCH_ASSOC);
-        return $notas['enviado2'] == 1; 
+        return $notas['enviado1'] == 1; 
     }
 
     function MarcaComoNotasEnviadas($idMatricula){
         $con=PdoOpenCon();
-        $sql="UPDATE notas SET enviado2 = 1 WHERE idMatricula = :idMatricula";
+        $sql="UPDATE notas SET enviado1 = 1 WHERE idMatricula = :idMatricula";
         $op=$con->prepare($sql);
         $result=$op->execute(   array(":idMatricula"=>$idMatricula)   );
         return $result; 
@@ -1192,8 +1273,9 @@
         $con=PdoOpenCon();
         $sql="INSERT INTO notas ( idMatricula, speaking1, speaking2, listening1, listening2, writing1, writing2, reading1, reading2, 
                                     examenEscrito1, examenEscrito2, participacion1, participacion2, comportamiento1, comportamiento2, 
-                                    examenOral2, unit1, unit2, unit3, unit4, unit5, unit6, unit7, unit8, unit9, unit10, unit11, unit12, comentarios, enviado1, enviado2 )
-                            VALUES (:idMatricula, :speaking1, :speaking2, :listening1, :listening2, :writing1, :writing2, :reading1, :reading2,
+                                    examenOral2, unit1, unit2, unit3, unit4, unit5, unit6, unit7, unit8, unit9, unit10, unit11, unit12,
+                                     unit13, unit14, unit15, unit16, unit17, unit18, unit19, unit20, comentarios, enviado1, enviado2 )
+                            VALUES (:idMatricula, :speaking1, :speaking2, :listening1, :listening2, :writing1, :writing2, :reading1, :reading2, 
                                 :exEscrito1, :exEscrito2, :participacion1, :participacion2, :comportamiento1, :comportamiento2, :examenOral2,
                                 :unit1, :unit2, :unit3, :unit4, :unit5, :unit6, :unit7, :unit8, :unit9, :unit10, :unit11, :unit12, :unit13, :unit14, :unit15, 
                                 :unit16, :unit17, :unit18, :unit19, :unit20, :comentarios, 0, 0)";
@@ -1203,7 +1285,8 @@
                                     ":participacion1"=>$participacion1, ":participacion2"=>$participacion2, ":comportamiento1"=>$comportamiento1, ":comportamiento2"=>$comportamiento2, 
                                     ":examenOral2"=>$examenOral2, ":unit1"=>$unit1, ":unit2"=>$unit2, ":unit3"=>$unit3, ":unit4"=>$unit4, ":unit5"=>$unit5, ":unit6"=>$unit6, ":unit7"=>$unit7, 
                                     ":unit8"=>$unit8, ":unit9"=>$unit9, ":unit10"=>$unit10, ":unit11"=>$unit11, ":unit12"=>$unit12, ":unit13"=>$unit13,":unit14"=>$unit14,":unit15"=>$unit15,
-                                    ":unit16"=>$unit16,":unit17"=>$unit17,":unit18"=>$unit18,":unit19"=>$unit19,":unit20"=>$unit20, ":comentarios"=>$comentarios)   );
+                                    ":unit16"=>$unit16, ":unit17"=>$unit17, ":unit18"=>$unit18, ":unit19"=>$unit19, ":unit20"=>$unit20, ":comentarios"=>$comentarios)
+                            );
         return $result; 
     }
 

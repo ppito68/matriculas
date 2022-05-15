@@ -84,6 +84,7 @@
                                 <label class="input-group-text" for="cbxNotifCursos">Curso:</label>
                             </div>
                             <select class="custom-select" id="cbxNotifCursos" name="cbxNotifCursos">
+                                <?php echo GetHtmlFillSelectCursos(0); ?> 
                             </select>
                         </div>
                     </th>
@@ -93,6 +94,7 @@
                                 <label class="input-group-text" for="cbxNotifHorarios">Horario:</label>
                             </div>
                             <select class="custom-select" id="cbxNotifHorarios" name="cbxNotifHorarios">
+                                <?php echo GetHtmlFillSelectHorarios(0); ?> 
                             </select>
                         </div>                        
                     </th>

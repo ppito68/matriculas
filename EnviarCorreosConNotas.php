@@ -8,10 +8,11 @@ $centro = $_POST["idCentro"];
 $idAula = $_POST["idAula"];
 $curso = $_POST["curso"];
 $horario = $_POST["horario"];
+$idPromocion = $_POST["idPromocion"];
 
 $incidencias="";
 
-$grupos = CovGetGruposAInformar($fecha, $centro, $idAula, $curso, $horario);
+$grupos = GetGruposAInformar($fecha, $centro, $idAula, $curso, $horario, $idPromocion);
 while($grupo=$grupos->fetch(PDO::FETCH_ASSOC)){ 
 
 
@@ -22,7 +23,7 @@ while($grupo=$grupos->fetch(PDO::FETCH_ASSOC)){
     $diasSemana = $grupo['dias'];
     
     // obtener los alumnos del grupo 
-    $alumnos = CovGetAsistenciasGrupo($fecha, $centroGrupo, $idAulaGrupo, $cursoGrupo, $horarioGrupo);
+    $alumnos = GetAsistenciasGrupo($fecha, $centroGrupo, $idAulaGrupo, $cursoGrupo, $horarioGrupo, $idPromocion);
     $fechaConFormato = date("d-m-Y", strtotime($fecha));
     while($alumno=$alumnos->fetch(PDO::FETCH_ASSOC)){ 
 
@@ -37,17 +38,17 @@ while($grupo=$grupos->fetch(PDO::FETCH_ASSOC)){
             $texto = "<html>
                             <body>
                                 <p>Hola, te escribimos desde City School:</p>
-                                <p><b>" . $alumno['nombre'] . " " . $alumno['apellidos'] . "</b></p>
-                                <p>Tenemos el placer de enviarte tus calificaciones del curso.</p> 
+                                <p><b>" . $alumno['Nombre'] . " " . $alumno['Apellidos'] . "</b></p>
+                                <p>Tenemos el placer de enviarte tus calificaciones del primer periodo.</p> 
                                 <p>Gracias por confiar en nosotros.</p>
-                                <p>Te deseamos un feliz verano y un merecido descanso.</p>
-                                <p>Hasta la vuelta.</p>
                             </body>
                         </html>";
             
-            $destinatario = $alumno['email']; 
-            // $destinatario = 'jaguilar68@gmail.com';     // 'miguelezluis@gmail.com'; //  
 
+            $destinatario = $alumno['email']; 
+            //  $destinatario = 'jaguilar68@gmail.com';     // 'miguelezluis@gmail.com'; //  
+
+            
             $filePath = './pdfs/' . $alumno["idMatricula"] . '.pdf';
             EnviarEmailConAdjunto($destinatario, 'ENVIO DE CALIFICACIONES DEL CURSO ', $texto, $filePath);
             MarcaComoNotasEnviadas($alumno['idMatricula']);

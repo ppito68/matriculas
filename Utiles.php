@@ -14,7 +14,7 @@ function EnviarEmailConAdjunto($Destinatario, $Asunto, $mensaje, $file){
     //Encabezado para información del remitente
     $headers = "De: $fromName"." <".$from.">";
 
-    // $headers .= "\ncc: administracion@grupodmc.com\r\n" . // esto sería copia oculta
+    //$headers .= "\ncc: admin@cityschool.es\r\n" . // esto sería copia oculta
 
     //Limite Email
     $semi_rand = md5(time()); 
@@ -56,8 +56,6 @@ function EnviarEmailConAdjunto($Destinatario, $Asunto, $mensaje, $file){
 }
 
 
-
-
 Function EnviarEmail($Destinatario, $Asunto, $Mensaje){
 
     $header =  "MIME-Version: 1.0\r\n" .
@@ -89,7 +87,12 @@ function getDiaSemanaEnLetras($diasCifra){
     return $dias[$diasCifra-1];
 }
 
+
 function GenerarNotasPdf($idMatricula, $soloImprmir){
+
+    // obtiene los datos del alumno y otros a mostrar en el boletin de notas
+    $resAlum = GetAlumnoPorMatricula($idMatricula);
+    $alum = $resAlum->fetch(PDO::FETCH_ASSOC);
 
     // Busca en base de datos a ver si existeen las notas del alumno
     $res=GetNotas($idMatricula);
@@ -128,16 +131,16 @@ function GenerarNotasPdf($idMatricula, $soloImprmir){
         //       C U E R P O    D E L    B O L E T I N
         // ---------------------------------------------------
         $pdf->SetFont('Arial','B',16);
-        $pdf->Cell(0,10,'NOTAS DEL CURSO 2020-2021', 0, 2, 'C');
+        $pdf->Cell(0,10,'NOTAS DEL CURSO ' . $alum["Promocion"], 0, 2, 'C');
         //
         // Nombre Alumno
         $pdf->ln(4);
         $pdf->SetFont('Arial','B',12);
-        $pdf->Cell(0, 10, utf8_decode($notas['nombre'] . ' ' . $notas['apellidos']), 1, 1, 'C');
+        $pdf->Cell(0, 10, utf8_decode($alum['Nombre'] . ' ' . $alum['Apellidos']), 1, 1, 'C');
         // nº alumno - Curso - Horario - dias/semana - profesor
         $pdf->ln(4);
         $pdf->SetFont('Arial','B',10);
-        $pdf->Cell(0, 10, utf8_decode('NºAlumno: ') . $notas['numero'] . '  -  Curso: ' . $notas['curso'] . '  -  Horario: ' . $notas['horario'] . ' ' . $notas['dias'] . '  -  Profesor: ' . $notas['nombreProfesor'] , 1, 1, 'C');
+        $pdf->Cell(0, 10, utf8_decode('NºAlumno: ') . $alum['NumeroAlumno'] . '  -  Curso: ' . $alum['curso'] . '  -  Horario: ' . $alum['horario'] . ' ' . $alum['dias'] . '  -  Profesor: ' . $alum['profesor'] , 1, 1, 'C');
         //
         // Notas
         $pdf->SetLineWidth(0.1);
@@ -248,18 +251,21 @@ function GenerarNotasPdf($idMatricula, $soloImprmir){
         $pdf->ln(8);
         $pdf->SetX(120);
         $pdf->SetFont('Arial','',11);
-        $pdf->Cell(55, 7, 'Sevilla, a 25 de Junio de 2021', 0, 1);
-    
-        if($soloImprmir){
-            $pdf->Output();
 
-        }else{
-            $pdf->Output('F', './pdfs/' . $idMatricula . '.pdf');
-        }
+        // $hoy = getdate();
+        // $fechaFirma = 'Sevilla, ' . $hoy["mday"] . ' de ' . $hoy["month"] . ' de ' . $hoy["year"] ;
+        setlocale(LC_ALL,"es_ES");
+        $fechaFirma = strftime("%d de %B de %Y");
+        $pdf->Cell(55, 7, $fechaFirma , 0, 1);
+    
+        // if(!$soloImprmir){
+        $pdf->Output('F', './pdfs/' . $idMatricula . '.pdf');
+        // }
+        //$pdf->Output();
 
         $res->closeCursor();
 
-        return true;
+        return; 
 
     }else{
         return false;

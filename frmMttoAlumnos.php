@@ -11,7 +11,7 @@ $resultAlum = GetAlumno($numero);
 $alum = $resultAlum->fetch(PDO::FETCH_ASSOC);
 
 //carga datos dela matricula, según la promocion
-$resultMat = GetMatricula($alum["id"], $idPromocion);
+$resultMat = GetMatricula($alum["id"], $idPromocion, true);
 $mat = $resultMat->fetch(PDO::FETCH_ASSOC);
 
 // var_dump( $alum["id"], $idPromocion);
@@ -116,12 +116,12 @@ $html = '<script>
               </div>
               <div class="form-group col-md-2">
                 <label for="cbxMttoCursos">Curso</label>
-                <select id="cbxMttoCursos" class="form-control" name="curso" required> ' . GetHtmlFillSelectCursos($mat["curso"], $idPromocion) . '
+                <select id="cbxMttoCursos" class="form-control" name="curso" required> ' . GetHtmlFillSelectCursos($mat["idCurso"]) . '
                 </select>
               </div>
               <div class="form-group col-md-2">
                 <label for="cbxMttoHorario">Horario</label>
-                <select id="cbxMttoHorario" class="form-control" name="horario" required> ' . GetHtmlFillSelectHorarios($mat["horario"], $idPromocion) . '
+                <select id="cbxMttoHorario" class="form-control" name="horario" required> ' . GetHtmlFillSelectHorarios($mat["idHorario"]) . '
                 </select>
               </div>
               <div class="form-group col-md-2">
